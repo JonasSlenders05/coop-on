@@ -2,53 +2,47 @@
 
 ## Stap 1: ontwerp ERD
 ```
-    [Event]
-    *id
-    naam
-    locatie
-    startDatum
-    eindDatum
+[Event] 
+*id
+naam 
+locatie 
+startDatum 
+eindDatum 
 
-    [Customer]
-    *id
-    voorNaam
-    achterNaam
-    email
-    telefoon
-    +eventId
+[Customer] 
+*id 
+voorNaam 
+achterNaam 
+email 
+telefoon 
 
-    [Vendor]
-    *id
-    naam
-    standNaam
-    +eventId
+[Wallet] 
+*id 
+waarde 
+status 
+gemaaktOp
++customerId 
++eventId 
 
-    [Bon]
-    *id
-    waarde
-    status
-    purchaseDate
-    +customerId
+[Transaction] 
+*id 
+datum 
+aantalBonnen 
++walletId 
++vendorId 
 
-    [Transaction]
-    *id
-    datum
-    aantalBonnen
-    +customerId
-    +vendorId
+[Verkoper] 
+*id 
+standNaam
+voorNaam 
+achterNaam 
+email 
+telefoon  
 
-    [TransactionBon]
-    *+transactionId
-    *+bonId
-    aantal
-
-    Event 1--* Customer
-    Event 1--* Vendor
-    Customer 1--* Bon
-    Customer 1--* Transaction
-    Vendor 1--* Transaction
-    Transaction 1--* TransactionBon
-    Bon 1--* TransactionBon
+Event 1--* Wallet Customer 
+1--* Wallet 
+Wallet 1--* Transaction 
+Verkoper 1--* Transaction
 ```
 
 **Resultaat:**

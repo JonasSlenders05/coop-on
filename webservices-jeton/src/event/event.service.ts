@@ -27,7 +27,9 @@ export class EventService {
     });
 
     if (!event) {
-      throw new NotFoundException('No event with this id exists');
+      throw new NotFoundException({
+        message: 'No event with this id exists',
+      });
     }
 
     return event;

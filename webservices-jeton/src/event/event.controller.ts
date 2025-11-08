@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
   Put,
 } from '@nestjs/common';
@@ -27,29 +28,31 @@ export class EventController {
   }
 
   @Get(':id')
-  getEventById(@Param('id') id: string): Promise<EventResponseDto> {
-    return this.eventService.getById(Number(id));
+  async getEventById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<EventResponseDto> {
+    return this.eventService.getById(id);
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  createEvent(
+  async createEvent(
     @Body() createEventDto: CreateEventRequestDto,
   ): Promise<EventResponseDto> {
     return this.eventService.create(createEventDto);
   }
 
   @Put(':id')
-  updateEvent(
-    @Param('id') id: string,
+  async updateEvent(
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateEventDto: UpdateEventRequestDto,
   ): Promise<EventResponseDto> {
-    return this.eventService.updateById(Number(id), updateEventDto);
+    return this.eventService.updateById(id, updateEventDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteEvent(@Param('id') id: string): Promise<void> {
-    return this.eventService.deleteById(Number(id));
+  async deleteEvent(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    return this.eventService.deleteById(id);
   }
 }
