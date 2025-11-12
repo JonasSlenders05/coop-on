@@ -1,18 +1,19 @@
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { WalletResponseDto } from 'src/wallet/wallet.dto';
 
 export class CreateEventRequestDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  naam: string;
+  name: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  locatie: string;
+  location: string;
 
-  startDatum: Date;
-  eindDatum: Date;
+  startDate: Date;
+  endDate: Date;
 }
 
 export class UpdateEventRequestDto extends CreateEventRequestDto {}
@@ -23,4 +24,8 @@ export class EventResponseDto extends CreateEventRequestDto {
 
 export class EventListResponseDto {
   items: EventResponseDto[];
+}
+
+export class EventDetailResponseDto extends EventResponseDto {
+  wallets: WalletResponseDto[];
 }

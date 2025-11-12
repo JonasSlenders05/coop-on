@@ -17,6 +17,7 @@ import {
   EventResponseDto,
   UpdateEventRequestDto,
 } from './event.dto';
+import { WalletResponseDto } from 'src/wallet/wallet.dto';
 
 @Controller('events')
 export class EventController {
@@ -54,5 +55,12 @@ export class EventController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteEvent(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.eventService.deleteById(id);
+  }
+
+  @Get('/:id/wallets')
+  async getWalletsByEvent(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<WalletResponseDto[]> {
+    return await this.eventService.getWalletsByEvent(id);
   }
 }

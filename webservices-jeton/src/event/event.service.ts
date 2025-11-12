@@ -10,7 +10,8 @@ import {
   InjectDrizzle,
 } from '../drizzle/drizzle.provider';
 import { eq } from 'drizzle-orm';
-import { events } from '../drizzle/schema';
+import { events, wallets } from '../drizzle/schema';
+import { WalletResponseDto } from 'src/wallet/wallet.dto';
 
 @Injectable()
 export class EventService {
@@ -24,6 +25,14 @@ export class EventService {
   async getById(id: number): Promise<EventResponseDto> {
     const event = await this.db.query.events.findFirst({
       where: eq(events.id, id),
+      with: {
+        wallets: {
+          with: {
+            customer: true,
+            event: true,
+          },
+        },
+      },
     });
 
     if (!event) {
@@ -58,5 +67,16 @@ export class EventService {
     if (result.affectedRows === 0) {
       throw new NotFoundException('No event with this id exists');
     }
+  }
+
+  async getWalletsByEvent(eventId: number): Promise<WalletResponseDto[]> {
+    const eventWallets = await this.db.query.wallets.findMany({
+      where: eq(wallets.eventId, eventId),
+      with: {
+        customer: true,
+        event: true,
+      },
+    });
+    return eventWallets;
   }
 }

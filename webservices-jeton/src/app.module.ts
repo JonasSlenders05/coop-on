@@ -7,6 +7,10 @@ import { DrizzleModule } from './drizzle/drizzle.module';
 import { EventModule } from './event/event.module';
 import { HealthController } from './health/health.controller';
 import { LoggerMiddleware } from './lib/logger.middleware';
+import { WalletModule } from './wallet/wallet.module';
+import { CustomerModule } from './customer/customer.module';
+import { VendorModule } from './vendor/vendor.module';
+import { TransactionModule } from './transaction/transaction.module';
 
 @Module({
   imports: [
@@ -16,6 +20,10 @@ import { LoggerMiddleware } from './lib/logger.middleware';
       isGlobal: true,
     }),
     DrizzleModule,
+    WalletModule,
+    CustomerModule,
+    VendorModule,
+    TransactionModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

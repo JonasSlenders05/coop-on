@@ -7,7 +7,7 @@ services:
       - db_data:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: jeton
+      MYSQL_DATABASE: coop_on
       MYSQL_USER: devusr
       MYSQL_PASSWORD: devpwd
     healthcheck:

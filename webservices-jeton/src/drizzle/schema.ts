@@ -1,9 +1,9 @@
-import { sql } from 'drizzle-orm';
+import { relations } from 'drizzle-orm';
 import {
-  datetime,
   uniqueIndex,
   varchar,
   boolean,
+  timestamp,
 } from 'drizzle-orm/mysql-core';
 import { date, int } from 'drizzle-orm/mysql-core';
 import { mysqlTable } from 'drizzle-orm/mysql-core';
@@ -12,56 +12,104 @@ export const events = mysqlTable(
   'events',
   {
     id: int('id', { unsigned: true }).primaryKey().autoincrement(),
-    naam: varchar('naam', { length: 255 }).notNull(),
-    locatie: varchar('locatie', { length: 255 }).notNull(),
-    startDatum: date('startDatum').notNull(),
-    eindDatum: date('eindDatum').notNull(),
+    name: varchar('name', { length: 255 }).notNull(),
+    location: varchar('location', { length: 255 }).notNull(),
+    startDate: date('startDate').notNull(),
+    endDate: date('endDate').notNull(),
   },
-  (table) => [uniqueIndex('idx_event_name_unique').on(table.naam)],
+  (table) => [uniqueIndex('idx_event_name_unique').on(table.name)],
 );
 
-export const customers = mysqlTable('customers', {
-  id: int('id', { unsigned: true }).primaryKey().autoincrement(),
-  voornaam: varchar('voornaam', { length: 255 }).notNull(),
-  achternaam: varchar('achternaam', { length: 255 }).notNull(),
-  email: varchar('email', { length: 255 }).notNull(),
-  telefoon: varchar('telefoon', { length: 20 }).notNull(),
-});
+export const customers = mysqlTable(
+  'customers',
+  {
+    id: int('id', { unsigned: true }).primaryKey().autoincrement(),
+    firstname: varchar('firstname', { length: 255 }).notNull(),
+    lastname: varchar('lastname', { length: 255 }).notNull(),
+    email: varchar('email', { length: 255 }).notNull(),
+    phonenumber: varchar('phonenumber', { length: 20 }).notNull(),
+  },
+  (table) => [uniqueIndex('idx_customer_email_unique').on(table.email)],
+);
 
-export const wallets = mysqlTable('wallets', {
-  id: int('id', { unsigned: true }).primaryKey().autoincrement(),
-  waarde: int('waarde', { unsigned: true }).notNull().default(0),
-  status: boolean('status').notNull().default(true),
-  gemaaktOp: datetime('gemaaktOp')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  customerId: int('customerId', { unsigned: true })
-    .references(() => customers.id, { onDelete: 'cascade' })
-    .notNull(),
-  eventId: int('eventId', { unsigned: true })
-    .references(() => events.id, { onDelete: 'cascade' })
-    .notNull(),
-});
+export const wallets = mysqlTable(
+  'wallets',
+  {
+    id: int('id', { unsigned: true }).primaryKey().autoincrement(),
+    value: int('value', { unsigned: true }).notNull().default(0),
+    state: boolean('status').notNull().default(true),
+    createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
+    customerId: int('customerId', { unsigned: true })
+      .references(() => customers.id, { onDelete: 'cascade' })
+      .notNull(),
+    eventId: int('eventId', { unsigned: true })
+      .references(() => events.id, { onDelete: 'cascade' })
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex('idx_unique_wallet_per_customer_event').on(
+      table.customerId,
+      table.eventId,
+    ),
+  ],
+);
+
+export const vendors = mysqlTable(
+  'vendors',
+  {
+    id: int('id', { unsigned: true }).primaryKey().autoincrement(),
+    boothName: varchar('boothName', { length: 255 }).notNull(),
+    firstname: varchar('firstname', { length: 255 }),
+    lastname: varchar('lastname', { length: 255 }),
+    email: varchar('email', { length: 255 }).notNull(),
+    phonenumber: varchar('phonenumber', { length: 20 }).notNull(),
+  },
+  (table) => [uniqueIndex('idx_verkoper_name_unique').on(table.boothName)],
+);
 
 export const transactions = mysqlTable('transactions', {
   id: int('id', { unsigned: true }).primaryKey().autoincrement(),
-  datum: datetime('datum', { fsp: 3 })
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP(3)`),
-  aantalBonnen: int('aantal_bonnen').notNull(),
+  date: timestamp('date', { mode: 'date' }).defaultNow().notNull(),
+  amount: int('amount').notNull(),
   walletId: int('walletId', { unsigned: true })
     .references(() => wallets.id, { onDelete: 'cascade' })
     .notNull(),
-  vendorId: int('eventId', { unsigned: true })
-    .references(() => events.id, { onDelete: 'cascade' })
+  vendorId: int('vendorId', { unsigned: true })
+    .references(() => vendors.id, { onDelete: 'cascade' })
     .notNull(),
 });
 
-export const verkopers = mysqlTable('verkopers', {
-  id: int('id', { unsigned: true }).primaryKey().autoincrement(),
-  standNaam: varchar('voornaam', { length: 255 }).notNull(),
-  voornaam: varchar('voornaam', { length: 255 }),
-  achternaam: varchar('achternaam', { length: 255 }),
-  email: varchar('email', { length: 255 }).notNull(),
-  telefoon: varchar('telefoon', { length: 20 }).notNull(),
-});
+export const eventsRelations = relations(events, ({ many }) => ({
+  wallets: many(wallets),
+}));
+
+export const walletsRelations = relations(wallets, ({ one, many }) => ({
+  event: one(events, {
+    fields: [wallets.eventId],
+    references: [events.id],
+  }),
+  customer: one(customers, {
+    fields: [wallets.customerId],
+    references: [customers.id],
+  }),
+  transactions: many(transactions),
+}));
+
+export const customersRelations = relations(customers, ({ many }) => ({
+  wallets: many(wallets),
+}));
+
+export const transactionsRelations = relations(transactions, ({ one }) => ({
+  wallet: one(wallets, {
+    fields: [transactions.walletId],
+    references: [wallets.id],
+  }),
+  vendor: one(vendors, {
+    fields: [transactions.vendorId],
+    references: [vendors.id],
+  }),
+}));
+
+export const vendorsRelations = relations(vendors, ({ many }) => ({
+  transactions: many(transactions),
+}));
