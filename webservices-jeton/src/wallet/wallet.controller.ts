@@ -14,7 +14,7 @@ import {
   CreateWalletRequestDto,
   UpdateWalletRequestDto,
   WalletListResponseDto,
-  WalletResponseDto,
+  PublicWalletResponseDto,
 } from './wallet.dto';
 import { WalletService } from './wallet.service';
 import { TransactionResponseDto } from 'src/transaction/transaction.dto';
@@ -31,7 +31,7 @@ export class WalletController {
   @Get(':id')
   async getWalletById(
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<WalletResponseDto> {
+  ): Promise<PublicWalletResponseDto> {
     return this.walletService.getById(id);
   }
 
@@ -39,7 +39,7 @@ export class WalletController {
   @HttpCode(HttpStatus.CREATED)
   async createWallet(
     @Body() createWalletDto: CreateWalletRequestDto,
-  ): Promise<WalletResponseDto> {
+  ): Promise<PublicWalletResponseDto> {
     return this.walletService.create(createWalletDto);
   }
 
@@ -47,7 +47,7 @@ export class WalletController {
   async updateWallet(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateWalletDto: UpdateWalletRequestDto,
-  ): Promise<WalletResponseDto> {
+  ): Promise<PublicWalletResponseDto> {
     return this.walletService.updateById(id, updateWalletDto);
   }
 

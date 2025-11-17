@@ -50,7 +50,7 @@ export class TransactionController {
     return this.transactionService.updateById(id, updateTransactionDto);
   }
 
-  @Delete()
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteTransaction(
     @Param('id', ParseIntPipe) id: number,

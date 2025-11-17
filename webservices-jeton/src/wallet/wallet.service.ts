@@ -8,32 +8,41 @@ import {
   CreateWalletRequestDto,
   UpdateWalletRequestDto,
   WalletListResponseDto,
-  WalletResponseDto,
+  PublicWalletResponseDto,
 } from './wallet.dto';
 import { eq } from 'drizzle-orm';
 import { TransactionResponseDto } from 'src/transaction/transaction.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class WalletService {
   constructor(@InjectDrizzle() private readonly db: DatabaseProvider) {}
 
   async getAll(): Promise<WalletListResponseDto> {
-    const items = await this.db.query.wallets.findMany({
-      with: {
-        customer: true,
-        event: true,
-      },
-    });
+    const walletList = await this.db.query.wallets
+      .findMany
+      // {
+      //   with: {
+      //     user: true,
+      //     event: true,
+      //   },
+      // }
+      ();
+    const items = walletList.map((wallet) =>
+      plainToInstance(PublicWalletResponseDto, wallet, {
+        excludeExtraneousValues: true,
+      }),
+    );
     return { items };
   }
 
-  async getById(id: number): Promise<WalletResponseDto> {
+  async getById(id: number): Promise<PublicWalletResponseDto> {
     const wallet = await this.db.query.wallets.findFirst({
       where: eq(wallets.id, id),
-      with: {
-        customer: true,
-        event: true,
-      },
+      // with: {
+      //   user: true,
+      //   event: true,
+      // },
     });
 
     if (!wallet) {
@@ -43,7 +52,9 @@ export class WalletService {
     return wallet;
   }
 
-  async create(wallet: CreateWalletRequestDto): Promise<WalletResponseDto> {
+  async create(
+    wallet: CreateWalletRequestDto,
+  ): Promise<PublicWalletResponseDto> {
     const [newWallet] = await this.db
       .insert(wallets)
       .values(wallet)
@@ -55,7 +66,7 @@ export class WalletService {
   async updateById(
     id: number,
     changes: UpdateWalletRequestDto,
-  ): Promise<WalletResponseDto> {
+  ): Promise<PublicWalletResponseDto> {
     const [wallet] = await this.db
       .update(wallets)
       .set(changes)
@@ -77,13 +88,13 @@ export class WalletService {
 
   async getWalletsBycustomerId(
     customerId: number,
-  ): Promise<WalletResponseDto[]> {
+  ): Promise<PublicWalletResponseDto[]> {
     const customerWallets = await this.db.query.wallets.findMany({
-      where: eq(wallets.customerId, customerId),
-      with: {
-        customer: true,
-        event: true,
-      },
+      where: eq(wallets.userId, customerId),
+      // with: {
+      //   user: true,
+      //   event: true,
+      // },
     });
     return customerWallets;
   }
@@ -93,11 +104,16 @@ export class WalletService {
   ): Promise<TransactionResponseDto[]> {
     const walletTransactions = await this.db.query.transactions.findMany({
       where: eq(transactions.walletId, walletId),
-      with: {
-        wallet: true,
-        vendor: true,
-      },
+      // with: {
+      //   wallet: true,
+      //   vendor: {
+      //     with: {
+      //       user: true,
+      //     },
+      //   },
+      // },
     });
+
     return walletTransactions;
   }
 }

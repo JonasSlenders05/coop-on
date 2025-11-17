@@ -11,7 +11,8 @@ import {
 } from '../drizzle/drizzle.provider';
 import { eq } from 'drizzle-orm';
 import { events, wallets } from '../drizzle/schema';
-import { WalletResponseDto } from 'src/wallet/wallet.dto';
+import { PublicWalletResponseDto } from 'src/wallet/wallet.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class EventService {
@@ -25,14 +26,6 @@ export class EventService {
   async getById(id: number): Promise<EventResponseDto> {
     const event = await this.db.query.events.findFirst({
       where: eq(events.id, id),
-      with: {
-        wallets: {
-          with: {
-            customer: true,
-            event: true,
-          },
-        },
-      },
     });
 
     if (!event) {
@@ -69,14 +62,15 @@ export class EventService {
     }
   }
 
-  async getWalletsByEvent(eventId: number): Promise<WalletResponseDto[]> {
+  async getWalletsByEvent(eventId: number): Promise<PublicWalletResponseDto[]> {
     const eventWallets = await this.db.query.wallets.findMany({
       where: eq(wallets.eventId, eventId),
-      with: {
-        customer: true,
-        event: true,
-      },
     });
-    return eventWallets;
+
+    return eventWallets.map((wallet) =>
+      plainToInstance(PublicWalletResponseDto, wallet, {
+        excludeExtraneousValues: true,
+      }),
+    );
   }
 }

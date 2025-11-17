@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "1590c4fe-d6b1-44ef-8cdb-c7f58cde159d",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "7173bb03-eb61-4168-ae44-fe4356bdf53c",
+  "prevId": "1590c4fe-d6b1-44ef-8cdb-c7f58cde159d",
   "tables": {
     "events": {
       "name": "events",
@@ -95,8 +95,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "organistion": {
-          "name": "organistion",
+        "organisation": {
+          "name": "organisation",
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true,
@@ -434,7 +434,9 @@
   "_meta": {
     "schemas": {},
     "tables": {},
-    "columns": {}
+    "columns": {
+      "\"organisers\".\"organistion\"": "\"organisers\".\"organisation\""
+    }
   },
   "internal": {
     "tables": {},

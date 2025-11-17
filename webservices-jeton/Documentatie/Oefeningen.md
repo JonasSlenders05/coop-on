@@ -2,47 +2,55 @@
 
 ## Stap 1: ontwerp ERD
 ```
-[Event] 
+[User]
 *id
-name 
-location 
-startDate
-endDate 
+firstname
+lastname
+email
+phonenumber
+passwordHash
+roles
 
-[Customer] 
-*id 
-firstname 
-lastname 
-email 
-phonenumber 
-
-[Wallet] 
-*id 
-value 
-state 
-createdAt
-+customerId 
-+eventId 
-
-[Transaction] 
-*id 
-date 
-amount 
-+walletId 
-+vendorId 
-
-[Vendor] 
-*id 
+[Vendor]
+*id
 boothName
-firstname 
-lastname 
-email 
-phonenumber  
++userId
 
-Event 1--* Wallet Customer 
-1--* Wallet 
-Wallet 1--* Transaction 
-Verkoper 1--* Transaction
+[Organiser]
+*id
++userId
+
+[Event]
+*id
+name
+location
+startDate
+endDate
++organiserId
+
+[Wallet]
+*id
+value
+state
+createdAt
++customerId
++eventId
+
+[Transaction]
+*id
+date
+amount
++walletId
++vendorId
+
+User 1--1 Vendor
+User 1--1 Organiser
+Organiser 1--* Event
+Event 1--* Wallet
+User 1--* Wallet
+Wallet 1--* Transaction
+Vendor 1--* Transaction
+
 ```
 
 **Resultaat:**
@@ -53,81 +61,94 @@ Verkoper 1--* Transaction
 
 # 🧩 API Endpoints — Coop On Project
 
-## Events
-| Method | Endpoint | Description |
-|--------|-----------|--------------|
-| GET | /api/events | Get all events |
-| GET | /api/events/:id | Get one event by ID |
-| POST | /api/events | Create a new event |
-| PUT | /api/events/:id | Update an event |
-| DELETE | /api/events/:id | Delete an event |
+## Users
+| Method | Endpoint | Description | Werkt |
+|--------|-----------|--------------|-----|
+| GET | /api/users | Get all users | ✅ |
+| GET | /api/users/:id | Get one user by ID | ✅ | 
+| PUT | /api/users/:id | Update a user | ✅ |
+| POST | /api/users | Add user | ✅ |
+| DELETE | /api/users/:id | Delete a user | ✅ |
 
-### Related
-| Method | Endpoint | Description |
-|--------|-----------|--------------|
-| GET | /api/events/:id/wallets | Get all wallets for an event |
-(| GET | /api/events/:id/customers | Get all customers registered for an event |)
+### Navragen
+| Method | Endpoint | Description | Werkt |
+|--------|-----------|--------------|-----|
+| GET | /api/users/:id/vendors | Get vendor profile for this user (if role = vendor) | ❌ |
+| GET | /api/users/:id/organiser | Get organiser profile for this user (if role = organiser) | ❌ |
+| GET | /api/users/:id/wallets | Get all wallets belonging to this user (if role = customer) | ❌ |
 
 ---
+## Session
+| Method | Endpoint | Description | Werkt |
+|--------|-----------|--------------|-----|
+| POST | /api/sessions/ Login as user |  ✅ |
+---
 
-## Customers
-| Method | Endpoint | Description |
-|--------|-----------|--------------|
-| GET | /api/customers | Get all customers |
-| GET | /api/customers/:id | Get one customer by ID |
-| POST | /api/customers | Create a new customer |
-| PUT | /api/customers/:id | Update customer info |
-| DELETE | /api/customers/:id | Delete a customer |
-
-### Related
-| Method | Endpoint | Description |
-|--------|-----------|--------------|
-| GET | /api/customers/:id/wallets | Get all wallets belonging to this customer |
+## Events
+| Method | Endpoint | Description | Werkt |
+|--------|-----------|--------------|-----|
+| GET | /api/events | Get all events | ✅ |
+| GET | /api/events/:id | Get one event by ID | ✅ |
+| POST | /api/events | Create a new event (requires organiserId) | ✅ |
+| PUT | /api/events/:id | Update an event | ✅ |
+| DELETE | /api/events/:id | Delete an event | ✅ | 
+| GET | /api/events/:id/wallets | Get all wallets for this event | ❓ | (moet value verborgen zijn)
+| GET | /api/events/:id/organiser | Get organiser for this event | ❓ |
 
 ---
 
 ## Wallets
-| Method | Endpoint | Description |
-|--------|-----------|--------------|
-| GET | /api/wallets | Get all wallets |
-| GET | /api/wallets/:id | Get one wallet by ID |
-| POST | /api/wallets | Create a new wallet (requires `customerId` + `eventId`) |
-| PUT | /api/wallets/:id | Update wallet (e.g. state or value) |
-| DELETE | /api/wallets/:id | Delete a wallet |
-| GET | /api/wallets/:id/transactions | Get all transactions for a wallet |
-| POST | /api/wallets/:id/transactions | Create a transaction (spend or receive) |
+| Method | Endpoint | Description | Werkt |
+|--------|-----------|--------------|-----|
+| GET | /api/wallets | Get all wallets | ✅ |
+| GET | /api/wallets/:id | Get one wallet by ID | ✅ |
+| POST | /api/wallets | Create a new wallet | ✅ |
+| PUT | /api/wallets/:id | Update wallet (value, state...) | ✅ |
+| DELETE | /api/wallets/:id | Delete a wallet | ✅ |
+| GET | /api/wallets/:id/transactions | Get all transactions for this wallet | ✅ |
+| POST | /api/wallets/:id/transactions | Create a transaction | ❓ |
 
 ---
 
 ## Transactions
-| Method | Endpoint | Description |
-|--------|-----------|--------------|
-| GET | /api/transactions | Get all transactions |
-| GET | /api/transactions/:id | Get one transaction by ID |
-| POST | /api/transactions | Create a transaction (requires `walletId` + `vendorId` + `amount`) |
-| PUT | /api/transactions/:id | Update a transaction (e.g. fix amount) |
-| DELETE | /api/transactions/:id | Delete a transaction |
+| Method | Endpoint | Description  Werkt |
+|--------|-----------|--------------|-----|
+| GET | /api/transactions | Get all transactions | ✅ |
+| GET | /api/transactions/:id | Get one transaction by ID | ✅ |
+| POST | /api/transactions | Create a transaction | ✅ |
+| PUT | /api/transactions/:id | Update a transaction | ❓ |
+| DELETE | /api/transactions/:id | Delete a transaction | ✅ |
 
 ---
 
 ## Vendors
-| Method | Endpoint | Description |
-|--------|-----------|--------------|
-| GET | /api/vendors | Get all vendors | 
-| GET | /api/vendors/:id | Get one vendor by ID |
-| POST | /api/vendors | Create a new vendor |
-| PUT | /api/vendors/:id | Update vendor info |
-| DELETE | /api/vendors/:id | Delete a vendor |
-| GET | /api/vendors/:id/transactions | Get all transactions for a vendor |
+| Method | Endpoint | Description | Werkt |
+|--------|-----------|--------------|-----|
+| GET | /api/vendors | Get all vendors | ✅ |
+| GET | /api/vendors/:id | Get one vendor by userID | ✅ |
+| PUT | /api/vendors/:id | Update vendor info | ✅ |
+| DELETE | /api/vendors/:id | Delete a vendor | ❓ |
+| GET | /api/vendors/:id/transactions | Get all transactions for this vendor | ✅ |
+
+---
+
+## Organisers
+| Method | Endpoint | Description | Werkt |
+|--------|-----------|--------------|-----|
+| GET | /api/organisers | Get all organisers | ✅ |
+| GET | /api/organisers/:id | Get one organiser by ID | ✅ |
+| PUT | /api/organisers/:id | Update organiser | ✅ |
+| DELETE | /api/organisers/:id | Delete organiser | ❓ |
+| GET | /api/organisers/:id/events | Get all events created by this organiser | ✅ |
 
 ---
 
 # Extra functional endpoints (optioneel)
 | Method | Endpoint | Description |
 |--------|-----------|--------------|
-| POST | /api/wallets/:id/topup | Add tokens to a wallet (amount > 0) |
-| POST | /api/wallets/:id/spend | Spend tokens (amount < 0) |
-| GET | /api/events/:id/summary | Get event summary (total wallets, total tokens, etc.) |
+| POST | /api/wallets/:id/topup | Add tokens to a wallet |
+| POST | /api/wallets/:id/spend | Spend tokens |
+| GET | /api/events/:id/summary | Get event summary (wallets, value, etc.) |
 | GET | /api/vendors/:id/summary | Get vendor earnings summary |
 
 
@@ -136,3 +157,43 @@ Verkoper 1--* Transaction
 
 
 
+## Vragen:
+
+-   Moeten best de id's megegeven worden of het volledige object:
+``` JSON
+{
+    "id": 1,
+    "value": 50,
+    "state": true,
+    "createdAt": "2025-11-16T09:28:16.000Z",
+    "userId": 1,
+    "eventId": 1,
+    "user": {
+        "id": 1,
+        "firstname": "Tom",
+        "lastname": "Devries",
+        "email": "tomdevries@coop-on.be"
+    }
+},
+
+// of
+{
+    "id": 1,
+    "value": 50,
+    "state": true,
+    "createdAt": "2025-11-16T09:28:16.000Z",
+    "userId": 1,
+    "eventId": 1,
+    "userId": 1
+}
+```
+
+-   Wallet value meegeven bij GET wallets calls?
+
+-   `roles` exposen bij GET users?
+
+-   Wallet `state` veranderen naar `active`
+
+-   Transaction maken vanuit `wallet` of `transaction` 
+
+-   Is PUT (update) `transaction` nodig? 

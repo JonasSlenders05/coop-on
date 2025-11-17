@@ -1,26 +1,18 @@
-export class PublicVendorDto {
-  id: number;
-  boothName: string;
-  firstname: string | null;
-  lastname: string | null;
-  email: string;
-  phonenumber: string;
-}
+import { Expose } from 'class-transformer';
+import { IsString } from 'class-validator';
 
-export class CreateVendorRequestDto {
+export class PublicVendorResponseDto {
+  @Expose()
+  userId: number;
+  @Expose()
   boothName: string;
-  firstname: string | null;
-  lastname: string | null;
-  email: string;
-  phonenumber: string;
 }
 
 export class VendorListResponseDto {
-  items: VendorResponseDto[];
+  items: PublicVendorResponseDto[];
 }
 
-export class VendorResponseDto extends CreateVendorRequestDto {
-  id: number;
+export class UpdateVendorRequestDto {
+  @IsString()
+  boothName: string;
 }
-
-export class UpdateVendorRequestDto extends CreateVendorRequestDto {}

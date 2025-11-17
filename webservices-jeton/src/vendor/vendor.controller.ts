@@ -7,14 +7,12 @@ import {
   HttpStatus,
   Param,
   ParseIntPipe,
-  Post,
   Put,
 } from '@nestjs/common';
 import {
-  CreateVendorRequestDto,
+  PublicVendorResponseDto,
   UpdateVendorRequestDto,
   VendorListResponseDto,
-  VendorResponseDto,
 } from './vendor.dto';
 import { VendorService } from './vendor.service';
 import { TransactionResponseDto } from 'src/transaction/transaction.dto';
@@ -31,27 +29,19 @@ export class VendorController {
   @Get(':id')
   async getVendorById(
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<VendorResponseDto> {
+  ): Promise<PublicVendorResponseDto> {
     return this.vendorService.getById(id);
   }
 
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  async createVendor(
-    @Body() createVendorDto: CreateVendorRequestDto,
-  ): Promise<VendorResponseDto> {
-    return this.vendorService.create(createVendorDto);
-  }
-
-  @Put()
+  @Put(':id')
   async updateVendor(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) userId: number,
     @Body() updateVendorDto: UpdateVendorRequestDto,
-  ): Promise<VendorResponseDto> {
-    return this.vendorService.updateById(id, updateVendorDto);
+  ): Promise<PublicVendorResponseDto> {
+    return this.vendorService.updateById(userId, updateVendorDto);
   }
 
-  @Delete('id')
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteVendor(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.vendorService.deleteById(id);

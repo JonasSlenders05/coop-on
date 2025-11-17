@@ -4,12 +4,11 @@ import {
   InjectDrizzle,
 } from 'src/drizzle/drizzle.provider';
 import {
-  CreateVendorRequestDto,
+  PublicVendorResponseDto,
   UpdateVendorRequestDto,
   VendorListResponseDto,
-  VendorResponseDto,
 } from './vendor.dto';
-import { transactions, vendors, wallets } from 'src/drizzle/schema';
+import { transactions, vendors } from 'src/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { TransactionResponseDto } from 'src/transaction/transaction.dto';
 
@@ -22,45 +21,38 @@ export class VendorService {
     return { items };
   }
 
-  async getById(id: number): Promise<VendorResponseDto> {
+  async getById(userId: number): Promise<PublicVendorResponseDto> {
     const vendor = await this.db.query.vendors.findFirst({
-      where: eq(vendors.id, id),
+      where: eq(vendors.userId, userId),
     });
 
     if (!vendor) {
-      throw new NotFoundException(`Vendor with id "${id}" not found`);
+      throw new NotFoundException(`Vendor with id "${userId}" not found`);
     }
 
     return vendor;
   }
 
-  async create(vendor: CreateVendorRequestDto): Promise<VendorResponseDto> {
-    const [newVendor] = await this.db
-      .insert(vendors)
-      .values(vendor)
-      .$returningId();
-
-    return this.getById(newVendor.id);
-  }
-
   async updateById(
-    id: number,
+    userId: number,
     changes: UpdateVendorRequestDto,
-  ): Promise<VendorResponseDto> {
+  ): Promise<PublicVendorResponseDto> {
     const [vendor] = await this.db
       .update(vendors)
       .set(changes)
-      .where(eq(wallets.id, id));
+      .where(eq(vendors.userId, userId));
 
     if (!vendor) {
-      throw new NotFoundException(`Vendor ${id} not found`);
+      throw new NotFoundException(`Vendor ${userId} not found`);
     }
 
-    return this.getById(id);
+    return this.getById(userId);
   }
 
-  async deleteById(id: number): Promise<void> {
-    const [result] = await this.db.delete(vendors).where(eq(vendors.id, id));
+  async deleteById(userId: number): Promise<void> {
+    const [result] = await this.db
+      .delete(vendors)
+      .where(eq(vendors.userId, userId));
     if (result.affectedRows === 0) {
       throw new NotFoundException('No event with this id exists');
     }
@@ -71,10 +63,6 @@ export class VendorService {
   ): Promise<TransactionResponseDto[]> {
     const walletTransactions = await this.db.query.transactions.findMany({
       where: eq(transactions.vendorId, vendorId),
-      with: {
-        wallet: true,
-        vendor: true,
-      },
     });
     return walletTransactions;
   }

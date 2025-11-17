@@ -1,102 +1,130 @@
 import { relations } from 'drizzle-orm';
 import {
-  uniqueIndex,
+  int,
   varchar,
   boolean,
+  date,
   timestamp,
+  json,
 } from 'drizzle-orm/mysql-core';
-import { date, int } from 'drizzle-orm/mysql-core';
-import { mysqlTable } from 'drizzle-orm/mysql-core';
+import { mysqlTable, uniqueIndex } from 'drizzle-orm/mysql-core';
 
-export const events = mysqlTable(
-  'events',
+export const users = mysqlTable(
+  'users',
   {
-    id: int('id', { unsigned: true }).primaryKey().autoincrement(),
-    name: varchar('name', { length: 255 }).notNull(),
-    location: varchar('location', { length: 255 }).notNull(),
-    startDate: date('startDate').notNull(),
-    endDate: date('endDate').notNull(),
-  },
-  (table) => [uniqueIndex('idx_event_name_unique').on(table.name)],
-);
-
-export const customers = mysqlTable(
-  'customers',
-  {
-    id: int('id', { unsigned: true }).primaryKey().autoincrement(),
+    id: int('id').primaryKey().autoincrement(),
     firstname: varchar('firstname', { length: 255 }).notNull(),
     lastname: varchar('lastname', { length: 255 }).notNull(),
     email: varchar('email', { length: 255 }).notNull(),
     phonenumber: varchar('phonenumber', { length: 20 }).notNull(),
+    passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+    roles: json('roles').notNull(),
   },
-  (table) => [uniqueIndex('idx_customer_email_unique').on(table.email)],
-);
-
-export const wallets = mysqlTable(
-  'wallets',
-  {
-    id: int('id', { unsigned: true }).primaryKey().autoincrement(),
-    value: int('value', { unsigned: true }).notNull().default(0),
-    state: boolean('status').notNull().default(true),
-    createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
-    customerId: int('customerId', { unsigned: true })
-      .references(() => customers.id, { onDelete: 'cascade' })
-      .notNull(),
-    eventId: int('eventId', { unsigned: true })
-      .references(() => events.id, { onDelete: 'cascade' })
-      .notNull(),
-  },
-  (table) => [
-    uniqueIndex('idx_unique_wallet_per_customer_event').on(
-      table.customerId,
-      table.eventId,
-    ),
-  ],
+  (table) => [uniqueIndex('uniq_user_email').on(table.email)],
 );
 
 export const vendors = mysqlTable(
   'vendors',
   {
-    id: int('id', { unsigned: true }).primaryKey().autoincrement(),
     boothName: varchar('boothName', { length: 255 }).notNull(),
-    firstname: varchar('firstname', { length: 255 }),
-    lastname: varchar('lastname', { length: 255 }),
-    email: varchar('email', { length: 255 }).notNull(),
-    phonenumber: varchar('phonenumber', { length: 20 }).notNull(),
+    userId: int('userId')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
   },
-  (table) => [uniqueIndex('idx_verkoper_name_unique').on(table.boothName)],
+  (table) => [uniqueIndex('uniq_vendor_userId').on(table.userId)],
+);
+
+export const organisers = mysqlTable(
+  'organisers',
+  {
+    userId: int('userId')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    organisation: varchar('organisation', { length: 255 }).notNull(),
+  },
+  (table) => [uniqueIndex('uniq_organiser_userId').on(table.userId)],
+);
+
+export const events = mysqlTable(
+  'events',
+  {
+    id: int('id').primaryKey().autoincrement(),
+    name: varchar('name', { length: 255 }).notNull(),
+    location: varchar('location', { length: 255 }).notNull(),
+    startDate: date('startDate').notNull(),
+    endDate: date('endDate').notNull(),
+    organiserId: int('organiserId')
+      .references(() => organisers.userId, { onDelete: 'cascade' })
+      .notNull(),
+  },
+  (table) => [uniqueIndex('uniq_event_name').on(table.name)],
+);
+
+export const wallets = mysqlTable(
+  'wallets',
+  {
+    id: int('id').primaryKey().autoincrement(),
+    value: int('value', { unsigned: true }).notNull().default(0),
+    state: boolean('state').notNull().default(true),
+    createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
+    userId: int('userId')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    eventId: int('eventId')
+      .references(() => events.id, { onDelete: 'cascade' })
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex('uniq_wallet_per_customer_event').on(
+      table.userId,
+      table.eventId,
+    ),
+  ],
 );
 
 export const transactions = mysqlTable('transactions', {
-  id: int('id', { unsigned: true }).primaryKey().autoincrement(),
+  id: int('id').primaryKey().autoincrement(),
   date: timestamp('date', { mode: 'date' }).defaultNow().notNull(),
   amount: int('amount').notNull(),
-  walletId: int('walletId', { unsigned: true })
+  walletId: int('walletId')
     .references(() => wallets.id, { onDelete: 'cascade' })
     .notNull(),
-  vendorId: int('vendorId', { unsigned: true })
-    .references(() => vendors.id, { onDelete: 'cascade' })
+  vendorId: int('vendorId')
+    .references(() => vendors.userId, { onDelete: 'cascade' })
     .notNull(),
 });
 
-export const eventsRelations = relations(events, ({ many }) => ({
+export const usersRelations = relations(users, ({ many }) => ({
+  wallets: many(wallets),
+  vendors: many(vendors),
+  organisers: many(organisers),
+}));
+
+export const vendorsRelations = relations(vendors, ({ one, many }) => ({
+  user: one(users, { fields: [vendors.userId], references: [users.id] }),
+  transactions: many(transactions),
+}));
+
+export const organisersRelations = relations(organisers, ({ one, many }) => ({
+  user: one(users, { fields: [organisers.userId], references: [users.id] }),
+  events: many(events),
+}));
+
+export const eventsRelations = relations(events, ({ many, one }) => ({
+  organiser: one(organisers, {
+    fields: [events.organiserId],
+    references: [organisers.userId],
+  }),
   wallets: many(wallets),
 }));
 
 export const walletsRelations = relations(wallets, ({ one, many }) => ({
-  event: one(events, {
-    fields: [wallets.eventId],
-    references: [events.id],
+  user: one(users, {
+    fields: [wallets.userId],
+    references: [users.id],
   }),
-  customer: one(customers, {
-    fields: [wallets.customerId],
-    references: [customers.id],
-  }),
+  event: one(events, { fields: [wallets.eventId], references: [events.id] }),
   transactions: many(transactions),
-}));
-
-export const customersRelations = relations(customers, ({ many }) => ({
-  wallets: many(wallets),
 }));
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
@@ -106,10 +134,6 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
   }),
   vendor: one(vendors, {
     fields: [transactions.vendorId],
-    references: [vendors.id],
+    references: [vendors.userId],
   }),
-}));
-
-export const vendorsRelations = relations(vendors, ({ many }) => ({
-  transactions: many(transactions),
 }));

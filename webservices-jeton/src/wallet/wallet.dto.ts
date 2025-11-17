@@ -1,33 +1,44 @@
-import { IsBoolean, IsDate, IsInt } from 'class-validator';
-import { PublicCustomerDto } from 'src/customer/customer.dto';
-import { EventResponseDto } from 'src/event/event.dto';
-import { Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsDate,
+  IsInt,
+  IsNumber,
+  IsOptional,
+} from 'class-validator';
+import { Expose, Type } from 'class-transformer';
 
-export class PublicWalletDto {
+export class PublicWalletResponseDto {
+  @Expose()
   id: number;
+
+  @IsNumber()
   value: number;
+
+  @Expose()
+  @IsBoolean()
   state: boolean;
+
+  @Expose()
+  @Type(() => Date)
+  @IsDate()
   createdAt: Date;
-  customerId: number;
+
+  @Expose()
+  @IsNumber()
+  userId: number;
+
+  @Expose()
+  @IsNumber()
   eventId: number;
 }
 
 export class WalletListResponseDto {
-  items: WalletResponseDto[];
-}
-
-export class WalletResponseDto {
-  id: number;
-  value: number;
-  state: boolean;
-  createdAt: Date;
-  customer: PublicCustomerDto;
-  event: EventResponseDto;
+  items: PublicWalletResponseDto[];
 }
 
 export class CreateWalletRequestDto {
   @IsInt()
-  customerId: number;
+  userId: number;
 
   @IsInt()
   eventId: number;
@@ -43,4 +54,12 @@ export class CreateWalletRequestDto {
   createdAt?: Date = new Date();
 }
 
-export class UpdateWalletRequestDto extends CreateWalletRequestDto {}
+export class UpdateWalletRequestDto {
+  @IsOptional()
+  @IsInt()
+  value?: number = 0;
+
+  @IsOptional()
+  @IsBoolean()
+  state: boolean;
+}

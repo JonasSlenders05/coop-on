@@ -18,10 +18,10 @@ export class TransactionService {
 
   async getAll(): Promise<TransactionListResponseDto> {
     const items = await this.db.query.transactions.findMany({
-      with: {
-        wallet: true,
-        vendor: true,
-      },
+      // with: {
+      //   wallet: true,
+      //   vendor: true,
+      // },
     });
 
     return { items };
@@ -30,10 +30,10 @@ export class TransactionService {
   async getById(id: number): Promise<TransactionResponseDto> {
     const transaction = await this.db.query.transactions.findFirst({
       where: eq(transactions.id, id),
-      with: {
-        wallet: true,
-        vendor: true,
-      },
+      // with: {
+      //   wallet: true,
+      //   vendor: true,
+      // },
     });
 
     if (!transaction) {
