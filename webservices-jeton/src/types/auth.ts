@@ -1,5 +1,13 @@
 export interface JwtPayload {
   sub: number;
   email: string;
-  roles: string[];
+  publicRoles: string[];
+  privateRoles: string[];
+}
+
+export interface Session {
+  id: number;
+  email: string;
+  publicRoles: string[];
+  privateRoles: string[];
 }

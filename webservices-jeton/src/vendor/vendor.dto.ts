@@ -1,11 +1,15 @@
-import { Expose } from 'class-transformer';
-import { IsString } from 'class-validator';
+import { Expose, Type } from 'class-transformer';
+import { IsString, MaxLength, MinLength } from 'class-validator';
+import { PublicUserResponseDto } from 'src/user/user.dto';
 
 export class PublicVendorResponseDto {
   @Expose()
   userId: number;
   @Expose()
   boothName: string;
+  @Expose()
+  @Type(() => PublicUserResponseDto)
+  user: PublicUserResponseDto;
 }
 
 export class VendorListResponseDto {
@@ -14,5 +18,7 @@ export class VendorListResponseDto {
 
 export class UpdateVendorRequestDto {
   @IsString()
+  @MinLength(2)
+  @MaxLength(255)
   boothName: string;
 }

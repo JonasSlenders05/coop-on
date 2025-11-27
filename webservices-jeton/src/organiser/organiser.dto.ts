@@ -1,11 +1,17 @@
-import { IsNumber, IsString } from 'class-validator';
+import { Expose, Type } from 'class-transformer';
+import { IsString, MaxLength, MinLength } from 'class-validator';
+import { PublicUserResponseDto } from 'src/user/user.dto';
 
 export class OrganiserResponseDto {
-  @IsNumber()
+  @Expose()
   userId: number;
 
-  @IsString()
+  @Expose()
   organisation: string;
+
+  @Expose()
+  @Type(() => PublicUserResponseDto)
+  user: PublicUserResponseDto;
 }
 
 export class OrganiserListResponseDto {
@@ -14,5 +20,7 @@ export class OrganiserListResponseDto {
 
 export class UpdateOrganiserRequestDto {
   @IsString()
+  @MinLength(2)
+  @MaxLength(255)
   organisation: string;
 }

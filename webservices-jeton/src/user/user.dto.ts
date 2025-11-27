@@ -1,75 +1,104 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import {
-  IsString,
   IsEmail,
   MinLength,
   MaxLength,
   IsOptional,
   IsEnum,
+  IsNotEmpty,
+  ValidateIf,
 } from 'class-validator';
-import { Role } from 'src/auth/roles';
+import { IsString } from 'nestjs-swagger-dto';
+import { PublicRole } from 'src/auth/roles';
 
 export class PublicUserResponseDto {
+  @ApiProperty({
+    description: 'User ID',
+    minimum: 1,
+    example: 1,
+  })
   @Expose()
   id: number;
 
+  @ApiProperty({
+    description: 'User firstname',
+    minLength: 2,
+    maxLength: 255,
+    example: 'John',
+  })
   @Expose()
-  @IsString()
-  @MinLength(2)
-  @MaxLength(255)
   firstname: string;
 
+  @ApiProperty({
+    description: 'User lastname',
+    minLength: 2,
+    maxLength: 255,
+    example: 'Doe',
+  })
   @Expose()
-  @IsString()
-  @MinLength(2)
-  @MaxLength(255)
   lastname: string;
 
+  @ApiProperty({
+    description: 'User email address',
+    example: 'user@email.com',
+    type: 'string',
+    format: 'email',
+  })
   @Expose()
-  @IsEmail()
   email: string;
 
+  @ApiProperty({
+    description: 'User phonenumber',
+    example: '+32471802753',
+    type: 'string',
+    minimum: 7,
+    maximum: 14,
+  })
   @Expose()
-  @IsString()
   phonenumber: string;
+
+  @ApiProperty({
+    description: 'User roles',
+    example: ['customer', 'vendor'],
+    enum: PublicRole,
+    isArray: true,
+  })
+  @Expose()
+  @IsEnum(PublicRole, { each: true })
+  publicRoles: PublicRole[];
 }
 
 export class RegisterUserRequestDto {
-  @IsString()
-  @MinLength(2)
-  @MaxLength(255)
+  @IsString({ name: 'firstname', minLength: 2, maxLength: 255 })
   firstname: string;
 
-  @IsString()
-  @MinLength(2)
-  @MaxLength(255)
+  @IsString({ name: 'lastname', minLength: 2, maxLength: 255 })
   lastname: string;
 
+  @IsString({ name: 'email', example: 'user@email.com' })
   @IsEmail()
   email: string;
 
-  @IsString()
+  @IsString({ name: 'phonenumber', example: '+32471802753' })
   phonenumber: string;
 
-  @IsString()
-  @MinLength(8)
-  @MaxLength(128)
+  @IsString({ name: 'password', minLength: 8, maxLength: 128 })
   password: string;
 
-  @IsOptional()
-  @IsString()
-  @MinLength(2)
-  @MaxLength(255)
+  @ValidateIf((o) => o.publicRoles?.includes(PublicRole.VENDOR))
+  @IsNotEmpty()
+  @IsString({ minLength: 2, maxLength: 255 })
   boothName?: string;
 
-  @IsOptional()
-  @IsString()
-  @MinLength(2)
-  @MaxLength(255)
+  @ValidateIf((o) => o.publicRoles?.includes(PublicRole.ORGANISER))
+  @IsNotEmpty()
+  @IsString({ name: 'organisation', minLength: 8, maxLength: 128 })
   organisation?: string;
 
-  @IsEnum(Role, { each: true })
-  role: Role;
+  @ApiProperty({ enum: PublicRole, isArray: true })
+  @IsEnum(PublicRole, { each: true })
+  publicRoles: PublicRole[];
 }
 
 export class UpdateUserRequestDto {

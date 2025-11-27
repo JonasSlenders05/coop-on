@@ -19,15 +19,12 @@ export class WalletService {
   constructor(@InjectDrizzle() private readonly db: DatabaseProvider) {}
 
   async getAll(): Promise<WalletListResponseDto> {
-    const walletList = await this.db.query.wallets
-      .findMany
-      // {
-      //   with: {
-      //     user: true,
-      //     event: true,
-      //   },
-      // }
-      ();
+    const walletList = await this.db.query.wallets.findMany({
+      with: {
+        user: true,
+        event: true,
+      },
+    });
     const items = walletList.map((wallet) =>
       plainToInstance(PublicWalletResponseDto, wallet, {
         excludeExtraneousValues: true,
@@ -39,17 +36,19 @@ export class WalletService {
   async getById(id: number): Promise<PublicWalletResponseDto> {
     const wallet = await this.db.query.wallets.findFirst({
       where: eq(wallets.id, id),
-      // with: {
-      //   user: true,
-      //   event: true,
-      // },
+      with: {
+        user: true,
+        event: true,
+      },
     });
 
     if (!wallet) {
       throw new NotFoundException(`Wallet with id "${id}" not found`);
     }
 
-    return wallet;
+    return plainToInstance(PublicWalletResponseDto, wallet, {
+      excludeExtraneousValues: true,
+    });
   }
 
   async create(
@@ -89,14 +88,19 @@ export class WalletService {
   async getWalletsBycustomerId(
     customerId: number,
   ): Promise<PublicWalletResponseDto[]> {
-    const customerWallets = await this.db.query.wallets.findMany({
+    const items = await this.db.query.wallets.findMany({
       where: eq(wallets.userId, customerId),
-      // with: {
-      //   user: true,
-      //   event: true,
-      // },
+      with: {
+        user: true,
+        event: true,
+      },
     });
-    return customerWallets;
+
+    return items.map((wallet) =>
+      plainToInstance(PublicWalletResponseDto, wallet, {
+        excludeExtraneousValues: true,
+      }),
+    );
   }
 
   async getTransactionByWalletId(
@@ -104,16 +108,20 @@ export class WalletService {
   ): Promise<TransactionResponseDto[]> {
     const walletTransactions = await this.db.query.transactions.findMany({
       where: eq(transactions.walletId, walletId),
-      // with: {
-      //   wallet: true,
-      //   vendor: {
-      //     with: {
-      //       user: true,
-      //     },
-      //   },
-      // },
+      with: {
+        wallet: true,
+        vendor: {
+          with: {
+            user: true,
+          },
+        },
+      },
     });
 
-    return walletTransactions;
+    return walletTransactions.map((tx) =>
+      plainToInstance(TransactionResponseDto, tx, {
+        excludeExtraneousValues: true,
+      }),
+    );
   }
 }

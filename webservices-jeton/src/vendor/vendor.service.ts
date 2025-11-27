@@ -11,26 +11,41 @@ import {
 import { transactions, vendors } from 'src/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { TransactionResponseDto } from 'src/transaction/transaction.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class VendorService {
   constructor(@InjectDrizzle() private readonly db: DatabaseProvider) {}
 
   async getAll(): Promise<VendorListResponseDto> {
-    const items = await this.db.query.vendors.findMany();
+    const vendorList = await this.db.query.vendors.findMany({
+      with: {
+        user: true,
+      },
+    });
+    const items = vendorList.map((vendors) =>
+      plainToInstance(PublicVendorResponseDto, vendors, {
+        excludeExtraneousValues: true,
+      }),
+    );
     return { items };
   }
 
   async getById(userId: number): Promise<PublicVendorResponseDto> {
     const vendor = await this.db.query.vendors.findFirst({
       where: eq(vendors.userId, userId),
+      with: {
+        user: true,
+      },
     });
 
     if (!vendor) {
       throw new NotFoundException(`Vendor with id "${userId}" not found`);
     }
 
-    return vendor;
+    return plainToInstance(PublicVendorResponseDto, vendor, {
+      excludeExtraneousValues: true,
+    });
   }
 
   async updateById(

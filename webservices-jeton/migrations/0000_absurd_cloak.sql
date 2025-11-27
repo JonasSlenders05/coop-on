@@ -11,7 +11,7 @@ CREATE TABLE `events` (
 --> statement-breakpoint
 CREATE TABLE `organisers` (
 	`userId` int NOT NULL,
-	`organistion` varchar(255) NOT NULL,
+	`organisation` varchar(255) NOT NULL,
 	CONSTRAINT `uniq_organiser_userId` UNIQUE(`userId`)
 );
 --> statement-breakpoint
@@ -31,7 +31,8 @@ CREATE TABLE `users` (
 	`email` varchar(255) NOT NULL,
 	`phonenumber` varchar(20) NOT NULL,
 	`password_hash` varchar(255) NOT NULL,
-	`roles` json NOT NULL,
+	`public_roles` json NOT NULL,
+	`private_roles` json NOT NULL,
 	CONSTRAINT `users_id` PRIMARY KEY(`id`),
 	CONSTRAINT `uniq_user_email` UNIQUE(`email`)
 );
@@ -45,7 +46,7 @@ CREATE TABLE `vendors` (
 CREATE TABLE `wallets` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`value` int unsigned NOT NULL DEFAULT 0,
-	`state` boolean NOT NULL DEFAULT true,
+	`active` boolean NOT NULL DEFAULT true,
 	`createdAt` timestamp NOT NULL DEFAULT (now()),
 	`userId` int NOT NULL,
 	`eventId` int NOT NULL,

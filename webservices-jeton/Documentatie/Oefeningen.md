@@ -9,7 +9,8 @@ lastname
 email
 phonenumber
 passwordHash
-roles
+publicRole
+privateRole
 
 [Vendor]
 *id
@@ -18,6 +19,7 @@ boothName
 
 [Organiser]
 *id
+organisation
 +userId
 
 [Event]
@@ -31,9 +33,9 @@ endDate
 [Wallet]
 *id
 value
-state
+active
 createdAt
-+customerId
++userId
 +eventId
 
 [Transaction]
@@ -58,8 +60,6 @@ Vendor 1--* Transaction
 <img src="image.png" alt="alt" width="500">
 
 ## Stap 2: endpoints definiëren
-
-# 🧩 API Endpoints — Coop On Project
 
 ## Users
 | Method | Endpoint | Description | Werkt |
@@ -189,11 +189,35 @@ Vendor 1--* Transaction
 ```
 
 -   Wallet value meegeven bij GET wallets calls?
+    * neen verborgen houden voor niet-user
 
 -   `roles` exposen bij GET users?
+    * ja
 
 -   Wallet `state` veranderen naar `active`
+    * ja
 
--   Transaction maken vanuit `wallet` of `transaction` 
+-   Transaction maken vanuit `wallet` of `transaction`
+    * vanuit wallet
 
--   Is PUT (update) `transaction` nodig? 
+-   Is PUT (update) `transaction` nodig?
+    * nee
+
+-   Moeten PUT requests ook een NotFoundException werpen?
+
+
+```JSON
+{
+  "id": 4,
+  "firstname": "Mario",
+  "lastname": "Pizza",
+  "email": "mario@pizza.be",
+  "phonenumber": "+32484750987",
+  "roles": ["vendor"],
+  "vendor": {
+    "boothName": "Mario's Pizza"
+  },
+  "organiser": null,
+  "wallets": null
+}
+```

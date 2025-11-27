@@ -1,14 +1,32 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { LoginRequestDto, LoginResponseDto } from './session.dto';
+import { Public } from 'src/auth/decorators/public.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Sessions')
 @Controller('sessions')
 export class SessionController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post() // 👈 2
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Login',
+  //   type: LoginResponseDto,
+  // })
+  // @ApiResponse({
+  //   status: 401,
+  //   description: 'Invalid credentials',
+  // })
+  // @ApiResponse({
+  //   status: 400,
+  //   description: 'Invalid input data',
+  // })
+  // @UseInterceptors(AuthDelayInterceptor)
+  @Post()
+  @Public()
   async signIn(@Body() loginDto: LoginRequestDto): Promise<LoginResponseDto> {
-    const token = await this.authService.login(loginDto); // 👈 3
-    return { token }; // 👈 4
+    const token = await this.authService.login(loginDto);
+    return { token };
   }
 }

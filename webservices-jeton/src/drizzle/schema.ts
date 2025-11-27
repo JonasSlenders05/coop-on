@@ -18,7 +18,8 @@ export const users = mysqlTable(
     email: varchar('email', { length: 255 }).notNull(),
     phonenumber: varchar('phonenumber', { length: 20 }).notNull(),
     passwordHash: varchar('password_hash', { length: 255 }).notNull(),
-    roles: json('roles').notNull(),
+    publicRoles: json('public_roles').notNull(),
+    privateRoles: json('private_roles').notNull(),
   },
   (table) => [uniqueIndex('uniq_user_email').on(table.email)],
 );
@@ -65,7 +66,7 @@ export const wallets = mysqlTable(
   {
     id: int('id').primaryKey().autoincrement(),
     value: int('value', { unsigned: true }).notNull().default(0),
-    state: boolean('state').notNull().default(true),
+    active: boolean('active').notNull().default(true),
     createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
     userId: int('userId')
       .references(() => users.id, { onDelete: 'cascade' })

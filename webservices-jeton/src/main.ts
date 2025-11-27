@@ -7,14 +7,17 @@ import {
   ValidationError,
   ValidationPipe,
 } from '@nestjs/common';
-import CustomLogger from './core/custumLogger';
+import CustomLogger from './core/customLogger';
 import { HttpExceptionFilter } from './lib/http-exception.filter';
 import { DrizzleQueryErrorFilter } from './drizzle/drizzle-query-error.filter';
+import helmet from 'helmet';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('api');
+  app.use(helmet());
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -51,6 +54,16 @@ async function bootstrap() {
       logLevels: log.levels,
     }),
   );
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Coop-on Web Services')
+    .setDescription('')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('docs', app, document);
 
   await app.listen(port);
 }

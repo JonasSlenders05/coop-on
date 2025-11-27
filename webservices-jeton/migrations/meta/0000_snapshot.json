@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "1590c4fe-d6b1-44ef-8cdb-c7f58cde159d",
+  "id": "b72adf83-1e3d-452d-b3de-64fe232c26e2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "events": {
@@ -95,8 +95,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "organistion": {
-          "name": "organistion",
+        "organisation": {
+          "name": "organisation",
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true,
@@ -256,8 +256,15 @@
           "notNull": true,
           "autoincrement": false
         },
-        "roles": {
-          "name": "roles",
+        "public_roles": {
+          "name": "public_roles",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "private_roles": {
+          "name": "private_roles",
           "type": "json",
           "primaryKey": false,
           "notNull": true,
@@ -349,8 +356,8 @@
           "autoincrement": false,
           "default": 0
         },
-        "state": {
-          "name": "state",
+        "active": {
+          "name": "active",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,

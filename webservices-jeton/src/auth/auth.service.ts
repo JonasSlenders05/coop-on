@@ -13,7 +13,7 @@ import { LoginRequestDto } from 'src/session/session.dto';
 import { organisers, users, vendors } from 'src/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { RegisterUserRequestDto } from 'src/user/user.dto';
-import { Role } from './roles';
+import { PrivateRole, PublicRole } from './roles';
 
 @Injectable()
 export class AuthService {
@@ -40,10 +40,24 @@ export class AuthService {
   }
 
   private signJwt(user: User): string {
+    // Parse roles als ze als string uit de DB komen
+    const publicRoles =
+      typeof user.publicRoles === 'string'
+        ? JSON.parse(user.publicRoles)
+        : user.publicRoles;
+
+    const privateRoles =
+      typeof user.privateRoles === 'string'
+        ? JSON.parse(user.privateRoles)
+        : user.privateRoles;
+
+    console.log('Signing JWT with:', { publicRoles, privateRoles }); // 👈 Debug
+
     return this.jwtService.sign({
       sub: user.id,
       email: user.email,
-      roles: user.roles,
+      privateRoles,
+      publicRoles,
     });
   }
 
@@ -87,9 +101,9 @@ export class AuthService {
     email,
     phonenumber,
     password,
-    role,
     boothName,
     organisation,
+    publicRoles,
   }: RegisterUserRequestDto): Promise<string> {
     const passwordHash = await this.hashPassword(password);
 
@@ -101,11 +115,12 @@ export class AuthService {
         email,
         phonenumber,
         passwordHash,
-        roles: [role],
+        publicRoles,
+        privateRoles: [PrivateRole.USER],
       })
       .$returningId();
 
-    if (role === Role.VENDOR) {
+    if (publicRoles.includes(PublicRole.VENDOR)) {
       if (!boothName) {
         throw new Error('Boothname is required for vendor registration');
       }
@@ -116,7 +131,7 @@ export class AuthService {
       });
     }
 
-    if (role === Role.ORGANISER) {
+    if (publicRoles.includes(PublicRole.ORGANISER)) {
       if (!organisation) {
         throw new Error('Organisation is required for organiser registration');
       }

@@ -1,22 +1,23 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsDate,
-  IsNotEmpty,
   IsNumber,
-  IsOptional,
   IsString,
   MaxLength,
+  MinLength,
 } from 'class-validator';
 import { PublicWalletResponseDto } from 'src/wallet/wallet.dto';
 
 export class CreateEventRequestDto {
+  @ApiProperty({ example: 'Loon', description: 'Name of the event' })
   @IsString()
-  @IsNotEmpty()
+  @MinLength(2)
   @MaxLength(255)
   name: string;
 
   @IsString()
-  @IsNotEmpty()
+  @MinLength(2)
   @MaxLength(255)
   location: string;
 
@@ -32,39 +33,14 @@ export class CreateEventRequestDto {
   organiserId: number;
 }
 
-export class UpdateEventRequestDto {
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(255)
-  name: string;
-
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(255)
-  location: string;
-
-  @IsOptional()
-  @Type(() => Date)
-  @IsDate()
-  startDate: Date;
-
-  @IsOptional()
-  @Type(() => Date)
-  @IsDate()
-  endDate: Date;
-
-  @IsOptional()
-  @IsNumber()
-  organiserId: number;
-}
+export class UpdateEventRequestDto extends CreateEventRequestDto {}
 
 export class EventResponseDto extends CreateEventRequestDto {
   id: number;
 }
 
 export class EventListResponseDto {
+  @ApiProperty({ type: () => [EventResponseDto] })
   items: EventResponseDto[];
 }
 

@@ -1,35 +1,39 @@
 import {
   IsBoolean,
   IsDate,
-  IsInt,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
 } from 'class-validator';
 import { Expose, Type } from 'class-transformer';
+import { EventResponseDto } from 'src/event/event.dto';
+import { PublicUserResponseDto } from 'src/user/user.dto';
 
 export class PublicWalletResponseDto {
   @Expose()
   id: number;
 
-  @IsNumber()
   value: number;
 
   @Expose()
-  @IsBoolean()
-  state: boolean;
+  active: boolean;
 
   @Expose()
-  @Type(() => Date)
-  @IsDate()
   createdAt: Date;
 
   @Expose()
-  @IsNumber()
   userId: number;
 
   @Expose()
-  @IsNumber()
   eventId: number;
+
+  @Expose()
+  @Type(() => EventResponseDto)
+  event: EventResponseDto;
+
+  @Expose()
+  @Type(() => PublicUserResponseDto)
+  user: PublicUserResponseDto;
 }
 
 export class WalletListResponseDto {
@@ -37,17 +41,21 @@ export class WalletListResponseDto {
 }
 
 export class CreateWalletRequestDto {
-  @IsInt()
+  @IsNumber()
+  @IsNotEmpty()
   userId: number;
 
-  @IsInt()
+  @IsNumber()
+  @IsNotEmpty()
   eventId: number;
 
-  @IsInt()
+  @IsNumber()
+  @IsNotEmpty()
   value?: number = 0;
 
   @IsBoolean()
-  state: boolean;
+  @IsNotEmpty()
+  active: boolean;
 
   @Type(() => Date)
   @IsDate()
@@ -56,10 +64,10 @@ export class CreateWalletRequestDto {
 
 export class UpdateWalletRequestDto {
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   value?: number = 0;
 
   @IsOptional()
   @IsBoolean()
-  state: boolean;
+  active: boolean;
 }

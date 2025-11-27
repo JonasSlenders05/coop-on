@@ -1,11 +1,13 @@
-import { Type } from 'class-transformer';
-import { IsDate, IsNumber } from 'class-validator';
+import { Expose, Type } from 'class-transformer';
+import { IsDate, IsNotEmpty, IsNumber, Min } from 'class-validator';
 
 export class CreateTransactionRequestDto {
   @IsNumber()
+  @IsNotEmpty()
   walletId: number;
 
   @IsNumber()
+  @IsNotEmpty()
   vendorId: number;
 
   @Type(() => Date)
@@ -13,26 +15,23 @@ export class CreateTransactionRequestDto {
   date?: Date = new Date();
 
   @IsNumber()
+  @IsNotEmpty()
+  @Min(0.00001)
   amount: number;
 }
 
 export class UpdateTransactionRequestDto extends CreateTransactionRequestDto {}
 
 export class TransactionResponseDto {
-  @IsNumber()
+  @Expose()
   id: number;
-
-  @Type(() => Date)
-  @IsDate()
+  @Expose()
   date: Date;
-
-  @IsNumber()
+  @Expose()
   amount: number;
-
-  @IsNumber()
+  @Expose()
   walletId: number;
-
-  @IsNumber()
+  @Expose()
   vendorId: number;
 }
 

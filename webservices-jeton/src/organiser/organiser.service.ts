@@ -11,26 +11,41 @@ import {
 import { events, organisers } from 'src/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { EventResponseDto } from 'src/event/event.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class OrganiserService {
   constructor(@InjectDrizzle() private readonly db: DatabaseProvider) {}
 
   async getAll(): Promise<OrganiserListResponseDto> {
-    const items = await this.db.query.organisers.findMany();
+    const organiserList = await this.db.query.organisers.findMany({
+      with: {
+        user: true,
+      },
+    });
+    const items = organiserList.map((organiser) =>
+      plainToInstance(OrganiserResponseDto, organiser, {
+        excludeExtraneousValues: true,
+      }),
+    );
     return { items };
   }
 
   async getById(userId: number): Promise<OrganiserResponseDto> {
     const organiser = await this.db.query.organisers.findFirst({
       where: eq(organisers.userId, userId),
+      with: {
+        user: true,
+      },
     });
 
     if (!organiser) {
-      throw new NotFoundException('No organiser with this id found');
+      throw new NotFoundException('No organiser with this id exists');
     }
 
-    return organiser;
+    return plainToInstance(OrganiserResponseDto, organiser, {
+      excludeExtraneousValues: true,
+    });
   }
 
   async updateById(
@@ -42,7 +57,7 @@ export class OrganiserService {
       .set(changes)
       .where(eq(organisers.userId, userId));
     if (!organiser) {
-      throw new NotFoundException('Organiser with this id not found');
+      throw new NotFoundException('No organiser with this id exists');
     }
 
     return this.getById(userId);
@@ -53,16 +68,19 @@ export class OrganiserService {
       .delete(organisers)
       .where(eq(organisers.userId, userId));
     if (result.affectedRows === 0) {
-      throw new NotFoundException('No event with this id exists');
+      throw new NotFoundException('No organiser with this id exists');
     }
   }
 
   async getEventsByOrganiserId(
     organiserId: number,
   ): Promise<EventResponseDto[]> {
-    const eventOrganisers = await this.db.query.events.findMany({
+    await this.getById(organiserId);
+
+    const eventsForOrganiser = await this.db.query.events.findMany({
       where: eq(events.organiserId, organiserId),
     });
-    return eventOrganisers;
+
+    return eventsForOrganiser;
   }
 }
