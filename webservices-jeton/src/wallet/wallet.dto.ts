@@ -6,8 +6,8 @@ import {
   IsOptional,
 } from 'class-validator';
 import { Expose, Type } from 'class-transformer';
-import { EventResponseDto } from 'src/event/event.dto';
-import { PublicUserResponseDto } from 'src/user/user.dto';
+import { EventResponseDto } from '../event/event.dto';
+import { PublicUserResponseDto } from '../user/user.dto';
 
 export class PublicWalletResponseDto {
   @Expose()
@@ -41,10 +41,6 @@ export class WalletListResponseDto {
 }
 
 export class CreateWalletRequestDto {
-  @IsNumber()
-  @IsNotEmpty()
-  userId: number;
-
   @IsNumber()
   @IsNotEmpty()
   eventId: number;

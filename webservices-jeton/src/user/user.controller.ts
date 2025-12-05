@@ -19,18 +19,18 @@ import {
   UserListResponseDto,
 } from './user.dto';
 import { UserService } from './user.service';
-import { LoginResponseDto } from 'src/session/session.dto';
-import { AuthService } from 'src/auth/auth.service';
-import { CheckUserAccessGuard } from 'src/auth/guards/userAcces.guard';
+import { LoginResponseDto } from '../session/session.dto';
+import { AuthService } from '../auth/auth.service';
+import { CheckUserAccessGuard } from '../auth/guards/userAcces.guard';
 import { type Session } from '../types/auth';
-import { CurrentUser } from 'src/auth/decorators/currentUser.decorator';
-import { PublicWalletResponseDto } from 'src/wallet/wallet.dto';
-import { Roles } from 'src/auth/decorators/roles.decorator';
-import { PrivateRole } from 'src/auth/roles';
+import { CurrentUser } from '../auth/decorators/currentUser.decorator';
+import { PublicWalletResponseDto } from '../wallet/wallet.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { PrivateRole } from '../auth/roles';
 import { ApiBearerAuth, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Public } from 'src/auth/decorators/public.decorator';
-import { AuthDelayInterceptor } from 'src/auth/interceptors/authDelay.interceptor';
-import { ParseUserIdPipe } from 'src/auth/pipes/parseUserId.pipe';
+import { Public } from '../auth/decorators/public.decorator';
+import { AuthDelayInterceptor } from '../auth/interceptors/authDelay.interceptor';
+import { ParseUserIdPipe } from '../auth/pipes/parseUserId.pipe';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -46,10 +46,6 @@ export class UserController {
     status: 200,
     description: 'Get all users',
     type: UserListResponseDto,
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - you need to be signed in',
   })
   @ApiResponse({
     status: 403,

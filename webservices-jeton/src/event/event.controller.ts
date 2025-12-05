@@ -17,10 +17,12 @@ import {
   EventResponseDto,
   UpdateEventRequestDto,
 } from './event.dto';
-import { PublicWalletResponseDto } from 'src/wallet/wallet.dto';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Roles } from 'src/auth/decorators/roles.decorator';
-import { PrivateRole, PublicRole } from 'src/auth/roles';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { PrivateRole, PublicRole } from '../auth/roles';
+import { PublicUserResponseDto } from '../user/user.dto';
+import { type Session } from '../types/auth';
+import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 
 @ApiTags('Events')
 @ApiBearerAuth()
@@ -37,10 +39,21 @@ export class EventController {
     description: 'Get all events',
     type: EventListResponseDto,
   })
-  @Roles(PrivateRole.ADMIN)
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - you need to be signed in',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+  })
+  @Roles(PrivateRole.ADMIN, PublicRole.ORGANISER)
   @Get()
-  async getAllEvents(): Promise<EventListResponseDto> {
-    return this.eventService.getAll();
+  async getAllEvents(
+    @CurrentUser() user: Session,
+  ): Promise<EventListResponseDto> {
+    const roles = [...user.privateRoles, ...user.publicRoles];
+    return this.eventService.getAll(user.id, roles);
   }
 
   @ApiResponse({
@@ -52,12 +65,13 @@ export class EventController {
     status: 404,
     description: 'Event not found',
   })
-  @Roles(PrivateRole.ADMIN, PrivateRole.USER)
   @Get(':id')
   async getEventById(
     @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: Session,
   ): Promise<EventResponseDto> {
-    return this.eventService.getById(id);
+    const roles = [...user.privateRoles, ...user.publicRoles];
+    return this.eventService.getById(id, user.id, roles);
   }
 
   @ApiResponse({
@@ -73,27 +87,44 @@ export class EventController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async createEvent(
+    @CurrentUser() user: Session,
     @Body() createEventDto: CreateEventRequestDto,
   ): Promise<EventResponseDto> {
-    return this.eventService.create(createEventDto);
+    const roles = [...user.privateRoles, ...user.publicRoles];
+
+    return this.eventService.create(user.id, createEventDto, roles);
   }
 
   @ApiResponse({
     status: 200,
-    description: 'Update event',
-    type: EventResponseDto,
+    description: 'Update event by ID',
+    type: PublicUserResponseDto,
   })
   @ApiResponse({
     status: 404,
     description: 'Event not found',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - you need to be signed in',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'You do not have access to this resource',
   })
   @Roles(PrivateRole.ADMIN, PublicRole.ORGANISER)
   @Put(':id')
   async updateEvent(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateEventDto: UpdateEventRequestDto,
+    @CurrentUser() user: Session,
   ): Promise<EventResponseDto> {
-    return this.eventService.updateById(id, updateEventDto);
+    const roles = [...user.privateRoles, ...user.publicRoles];
+    return this.eventService.updateById(id, updateEventDto, user.id, roles);
   }
 
   @ApiResponse({
@@ -108,20 +139,24 @@ export class EventController {
   @Roles(PrivateRole.ADMIN, PublicRole.ORGANISER)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteEvent(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.eventService.deleteById(id);
+  async deleteEvent(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: Session,
+  ): Promise<void> {
+    const roles = [...user.privateRoles, ...user.publicRoles];
+    return this.eventService.deleteById(id, user.id, roles);
   }
 
-  @ApiResponse({
-    status: 200,
-    description: 'Get wallets from event by eventID',
-    type: [PublicWalletResponseDto],
-  })
-  @Roles(PrivateRole.ADMIN, PublicRole.ORGANISER)
-  @Get('/:id/wallets')
-  async getWalletsByEvent(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<PublicWalletResponseDto[]> {
-    return await this.eventService.getWalletsByEvent(id);
-  }
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Get wallets from event by eventID',
+  //   type: [PublicWalletResponseDto],
+  // })
+  // @Roles(PrivateRole.ADMIN, PublicRole.ORGANISER)
+  // @Get('/:id/wallets')
+  // async getWalletsByEvent(
+  //   @Param('id', ParseIntPipe) id: number,
+  // ): Promise<PublicWalletResponseDto[]> {
+  //   return await this.eventService.getWalletsByEvent(id);
+  // }
 }

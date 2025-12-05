@@ -11,7 +11,7 @@ import {
 import { users, wallets } from '../drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { plainToInstance } from 'class-transformer';
-import { PublicWalletResponseDto } from 'src/wallet/wallet.dto';
+import { PublicWalletResponseDto } from '../wallet/wallet.dto';
 
 @Injectable()
 export class UserService {

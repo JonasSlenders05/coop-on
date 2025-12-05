@@ -2,15 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   type DatabaseProvider,
   InjectDrizzle,
-} from 'src/drizzle/drizzle.provider';
+} from '../drizzle/drizzle.provider';
 import {
   OrganiserListResponseDto,
   OrganiserResponseDto,
   UpdateOrganiserRequestDto,
 } from './organiser.dto';
-import { events, organisers } from 'src/drizzle/schema';
+import { events, organisers } from '../drizzle/schema';
 import { eq } from 'drizzle-orm';
-import { EventResponseDto } from 'src/event/event.dto';
+import { EventResponseDto } from '../event/event.dto';
 import { plainToInstance } from 'class-transformer';
 
 @Injectable()

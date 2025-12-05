@@ -2,8 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   type DatabaseProvider,
   InjectDrizzle,
-} from 'src/drizzle/drizzle.provider';
-import { transactions, wallets } from 'src/drizzle/schema';
+} from '../drizzle/drizzle.provider';
+import { wallets } from '../drizzle/schema';
 import {
   CreateWalletRequestDto,
   UpdateWalletRequestDto,
@@ -11,20 +11,22 @@ import {
   PublicWalletResponseDto,
 } from './wallet.dto';
 import { eq } from 'drizzle-orm';
-import { TransactionResponseDto } from 'src/transaction/transaction.dto';
 import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class WalletService {
   constructor(@InjectDrizzle() private readonly db: DatabaseProvider) {}
 
-  async getAll(): Promise<WalletListResponseDto> {
+  async getAll(
+    userId: number,
+    roles: string[],
+  ): Promise<WalletListResponseDto> {
+    const isAdmin = roles.includes('admin');
+
     const walletList = await this.db.query.wallets.findMany({
-      with: {
-        user: true,
-        event: true,
-      },
+      where: isAdmin ? undefined : eq(wallets.userId, userId),
     });
+
     const items = walletList.map((wallet) =>
       plainToInstance(PublicWalletResponseDto, wallet, {
         excludeExtraneousValues: true,
@@ -33,9 +35,11 @@ export class WalletService {
     return { items };
   }
 
-  async getById(id: number): Promise<PublicWalletResponseDto> {
+  async getById(id: number, roles: string[]): Promise<PublicWalletResponseDto> {
+    const isAdmin = roles.includes('admin');
+
     const wallet = await this.db.query.wallets.findFirst({
-      where: eq(wallets.id, id),
+      where: isAdmin ? undefined : eq(wallets.id, id),
       with: {
         user: true,
         event: true,
@@ -43,7 +47,7 @@ export class WalletService {
     });
 
     if (!wallet) {
-      throw new NotFoundException(`Wallet with id "${id}" not found`);
+      throw new NotFoundException('No wallet with this id found');
     }
 
     return plainToInstance(PublicWalletResponseDto, wallet, {
@@ -53,18 +57,24 @@ export class WalletService {
 
   async create(
     wallet: CreateWalletRequestDto,
+    userId: number,
+    roles: string[],
   ): Promise<PublicWalletResponseDto> {
     const [newWallet] = await this.db
       .insert(wallets)
-      .values(wallet)
+      .values({
+        ...wallet,
+        userId: userId,
+      })
       .$returningId();
 
-    return this.getById(newWallet.id);
+    return this.getById(newWallet.id, roles);
   }
 
   async updateById(
     id: number,
     changes: UpdateWalletRequestDto,
+    roles: string[],
   ): Promise<PublicWalletResponseDto> {
     const [wallet] = await this.db
       .update(wallets)
@@ -72,56 +82,58 @@ export class WalletService {
       .where(eq(wallets.id, id));
 
     if (!wallet) {
-      throw new NotFoundException(`Wallet ${id} not found`);
+      throw new NotFoundException('No wallet with this id found');
     }
 
-    return this.getById(id);
+    return this.getById(id, roles);
   }
 
   async deleteById(id: number): Promise<void> {
     const [result] = await this.db.delete(wallets).where(eq(wallets.id, id));
     if (result.affectedRows === 0) {
-      throw new NotFoundException(`Wallet ${id} not found`);
+      throw new NotFoundException('No wallet with this id found');
     }
   }
 
-  async getWalletsBycustomerId(
-    customerId: number,
-  ): Promise<PublicWalletResponseDto[]> {
-    const items = await this.db.query.wallets.findMany({
-      where: eq(wallets.userId, customerId),
-      with: {
-        user: true,
-        event: true,
-      },
-    });
+  // async getWalletBycustomerId(
+  //   customerId: number,
+  // ): Promise<PublicWalletResponseDto> {
+  //   const wallet = await this.db.query.wallets.findFirst({
+  //     where: eq(wallets.userId, customerId),
+  //     with: {
+  //       user: true,
+  //       event: true,
+  //     },
+  //   });
 
-    return items.map((wallet) =>
-      plainToInstance(PublicWalletResponseDto, wallet, {
-        excludeExtraneousValues: true,
-      }),
-    );
-  }
+  //   if (!wallet) {
+  //     throw new NotFoundException('No wallet with this id found');
+  //   }
 
-  async getTransactionByWalletId(
-    walletId: number,
-  ): Promise<TransactionResponseDto[]> {
-    const walletTransactions = await this.db.query.transactions.findMany({
-      where: eq(transactions.walletId, walletId),
-      with: {
-        wallet: true,
-        vendor: {
-          with: {
-            user: true,
-          },
-        },
-      },
-    });
+  //   return plainToInstance(PublicWalletResponseDto, wallet, {
+  //     excludeExtraneousValues: true,
+  //   });
+  // }
 
-    return walletTransactions.map((tx) =>
-      plainToInstance(TransactionResponseDto, tx, {
-        excludeExtraneousValues: true,
-      }),
-    );
-  }
+  // async getTransactionByWalletId(
+  //   walletId: number,
+  // ): Promise<TransactionResponseDto[]> {
+  //   const walletTransactions = await this.db.query.transactions.findMany({
+  //     where: eq(transactions.walletId, walletId),
+  //     with: {
+  //       wallet: true,
+  //       vendor: {
+  //         with: {
+  //           user: true,
+  //         },
+  //       },
+  //     },
+  //   });
+
+  //   return walletTransactions.map((tx) =>
+  //     plainToInstance(TransactionResponseDto, tx, {
+  //       excludeExtraneousValues: true,
+  //     }),
+  //   );
+  // }
 }

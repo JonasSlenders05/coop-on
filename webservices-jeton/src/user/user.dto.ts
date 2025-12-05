@@ -10,7 +10,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { IsString } from 'nestjs-swagger-dto';
-import { PublicRole } from 'src/auth/roles';
+import { PublicRole } from '../auth/roles';
 
 export class PublicUserResponseDto {
   @ApiProperty({

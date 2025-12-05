@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { DrizzleModule } from 'src/drizzle/drizzle.module';
+import { DrizzleModule } from '../drizzle/drizzle.module';
 import { ConfigService } from '@nestjs/config';
-import { ServerConfig, AuthConfig } from 'src/config/configuration';
+import { ServerConfig, AuthConfig } from '../config/configuration';
 import { JwtModule } from '@nestjs/jwt';
 
 @Module({

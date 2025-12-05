@@ -14,7 +14,9 @@ import helmet from 'helmet';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: process.env.LOG_DISABLED === 'true' ? false : undefined,
+  });
 
   app.setGlobalPrefix('api');
   app.use(helmet());
@@ -49,11 +51,13 @@ async function bootstrap() {
   const port = config.get<number>('port')!;
   const log = config.get<LogConfig>('log')!;
 
-  app.useLogger(
-    new CustomLogger({
-      logLevels: log.levels,
-    }),
-  );
+  if (!log.disabled) {
+    app.useLogger(
+      new CustomLogger({
+        logLevels: log.levels,
+      }),
+    );
+  }
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Coop-on Web Services')

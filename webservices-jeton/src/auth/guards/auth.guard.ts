@@ -41,6 +41,7 @@ export class AuthGuard implements CanActivate {
       // 👇 5
       request.user = {
         id: payload.sub,
+        roles: [...payload.privateRoles, ...payload.publicRoles],
         privateRoles: payload.privateRoles,
         publicRoles: payload.publicRoles,
         email: payload.email,

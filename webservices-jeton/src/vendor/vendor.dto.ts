@@ -1,6 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 import { IsString, MaxLength, MinLength } from 'class-validator';
-import { PublicUserResponseDto } from 'src/user/user.dto';
+import { PublicUserResponseDto } from '../user/user.dto';
 
 export class PublicVendorResponseDto {
   @Expose()

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { OrganiserController } from './organiser.controller';
-import { DrizzleModule } from 'src/drizzle/drizzle.module';
+import { DrizzleModule } from '../drizzle/drizzle.module';
 import { OrganiserService } from './organiser.service';
 
 @Module({

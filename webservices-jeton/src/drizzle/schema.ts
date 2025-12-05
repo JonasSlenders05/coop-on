@@ -93,6 +93,10 @@ export const transactions = mysqlTable('transactions', {
   vendorId: int('vendorId')
     .references(() => vendors.userId, { onDelete: 'cascade' })
     .notNull(),
+
+  eventId: int('eventId')
+    .references(() => events.id, { onDelete: 'cascade' })
+    .notNull(),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -136,5 +140,9 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
   vendor: one(vendors, {
     fields: [transactions.vendorId],
     references: [vendors.userId],
+  }),
+  event: one(events, {
+    fields: [transactions.eventId],
+    references: [events.id],
   }),
 }));

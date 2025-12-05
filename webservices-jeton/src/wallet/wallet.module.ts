@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { WalletController } from './wallet.controller';
-import { DrizzleModule } from 'src/drizzle/drizzle.module';
+import { DrizzleModule } from '../drizzle/drizzle.module';
 import { WalletService } from './wallet.service';
 
 @Module({

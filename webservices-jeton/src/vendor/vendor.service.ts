@@ -2,15 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   type DatabaseProvider,
   InjectDrizzle,
-} from 'src/drizzle/drizzle.provider';
+} from '../drizzle/drizzle.provider';
 import {
   PublicVendorResponseDto,
   UpdateVendorRequestDto,
   VendorListResponseDto,
 } from './vendor.dto';
-import { transactions, vendors } from 'src/drizzle/schema';
+import { transactions, vendors } from '../drizzle/schema';
 import { eq } from 'drizzle-orm';
-import { TransactionResponseDto } from 'src/transaction/transaction.dto';
+import { TransactionResponseDto } from '../transaction/transaction.dto';
 import { plainToInstance } from 'class-transformer';
 
 @Injectable()
@@ -40,7 +40,7 @@ export class VendorService {
     });
 
     if (!vendor) {
-      throw new NotFoundException(`Vendor with id "${userId}" not found`);
+      throw new NotFoundException(`Vendor with this id does not exist`);
     }
 
     return plainToInstance(PublicVendorResponseDto, vendor, {

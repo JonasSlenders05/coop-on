@@ -1,18 +1,18 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AuthConfig, ServerConfig } from 'src/config/configuration';
+import { AuthConfig, ServerConfig } from '../config/configuration';
 import {
   type DatabaseProvider,
   InjectDrizzle,
-} from 'src/drizzle/drizzle.provider';
+} from '../drizzle/drizzle.provider';
 import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayload } from 'src/types/auth';
-import { User } from 'src/types/users';
-import { LoginRequestDto } from 'src/session/session.dto';
-import { organisers, users, vendors } from 'src/drizzle/schema';
+import { JwtPayload } from '../types/auth';
+import { User } from '../types/users';
+import { LoginRequestDto } from '../session/session.dto';
+import { organisers, users, vendors } from '../drizzle/schema';
 import { eq } from 'drizzle-orm';
-import { RegisterUserRequestDto } from 'src/user/user.dto';
+import { RegisterUserRequestDto } from '../user/user.dto';
 import { PrivateRole, PublicRole } from './roles';
 
 @Injectable()
@@ -50,8 +50,6 @@ export class AuthService {
       typeof user.privateRoles === 'string'
         ? JSON.parse(user.privateRoles)
         : user.privateRoles;
-
-    console.log('Signing JWT with:', { publicRoles, privateRoles }); // 👈 Debug
 
     return this.jwtService.sign({
       sub: user.id,

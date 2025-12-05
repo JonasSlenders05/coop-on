@@ -9,23 +9,37 @@ import {
   type DatabaseProvider,
   InjectDrizzle,
 } from '../drizzle/drizzle.provider';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { events, wallets } from '../drizzle/schema';
-import { PublicWalletResponseDto } from 'src/wallet/wallet.dto';
+import { PublicWalletResponseDto } from '../wallet/wallet.dto';
 import { plainToInstance } from 'class-transformer';
+import { PrivateRole } from '../auth/roles';
 
 @Injectable()
 export class EventService {
   constructor(@InjectDrizzle() private readonly db: DatabaseProvider) {}
 
-  async getAll(): Promise<EventListResponseDto> {
-    const items = await this.db.query.events.findMany();
+  async getAll(id: number, roles: string[]): Promise<EventListResponseDto> {
+    const isAdmin = roles.includes('admin');
+
+    const items = await this.db.query.events.findMany({
+      where: isAdmin ? undefined : eq(events.organiserId, id),
+    });
+
     return { items };
   }
 
-  async getById(id: number): Promise<EventResponseDto> {
+  async getById(
+    id: number,
+    userId: number,
+    roles: string[],
+  ): Promise<EventResponseDto> {
+    const whereCondition = roles.includes(PrivateRole.ADMIN)
+      ? eq(events.id, id)
+      : and(eq(events.id, id), eq(events.organiserId, userId));
+
     const event = await this.db.query.events.findFirst({
-      where: eq(events.id, id),
+      where: whereCondition,
     });
 
     if (!event) {
@@ -37,28 +51,48 @@ export class EventService {
     return event;
   }
 
-  async create(event: CreateEventRequestDto): Promise<EventResponseDto> {
+  async create(
+    organiserId: number,
+    event: CreateEventRequestDto,
+    roles: string[],
+  ): Promise<EventResponseDto> {
     const [newEvent] = await this.db
       .insert(events)
-      .values(event)
+      .values({
+        ...event,
+        organiserId: organiserId,
+      })
       .$returningId();
 
-    return this.getById(newEvent.id);
+    return this.getById(newEvent.id, organiserId, roles);
   }
 
   async updateById(
     id: number,
     changes: UpdateEventRequestDto,
+    organiserId: number,
+    roles: string[],
   ): Promise<EventResponseDto> {
     await this.db.update(events).set(changes).where(eq(events.id, id));
 
-    return this.getById(id);
+    return this.getById(id, organiserId, roles);
   }
 
-  async deleteById(id: number): Promise<void> {
-    const [result] = await this.db.delete(events).where(eq(events.id, id));
-    if (result.affectedRows === 0) {
-      throw new NotFoundException('No event with this id exists');
+  async deleteById(
+    id: number,
+    organiserId: number,
+    roles: string[],
+  ): Promise<void> {
+    const isAdmin = roles.includes('admin');
+
+    const whereClause = isAdmin
+      ? eq(events.id, id)
+      : and(eq(events.id, id), eq(events.organiserId, organiserId));
+
+    const result = await this.db.delete(events).where(whereClause);
+
+    if (result[0].affectedRows === 0) {
+      throw new NotFoundException('Event not found with this id');
     }
   }
 

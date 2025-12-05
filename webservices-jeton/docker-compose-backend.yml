@@ -1,0 +1,17 @@
+services:
+  budget-app-backend:
+    container_name: coop_on-app-backend
+    image: coop_on-app-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      CORS_ORIGINS: '["http://localhost:5173", "http://localhost"]' 
+      CORS_MAX_AGE: 10800
+      DATABASE_URL: mysql://devusr:devpwd@host.docker.internal:3306/coop_on
+
+      AUTH_JWT_SECRET: eensuperveiligsecretvoorindevelopment
+    ports:
+      - '3000:3000'

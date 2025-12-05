@@ -18,8 +18,10 @@ import {
   UpdateTransactionRequestDto,
 } from './transaction.dto';
 import { ApiTags, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
-import { CurrentUser } from 'src/auth/decorators/currentUser.decorator';
+import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 import { type Session } from '../types/auth';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { PrivateRole } from '../auth/roles';
 
 @ApiTags('Transactions')
 @ApiBearerAuth()
@@ -35,6 +37,10 @@ export class TransactionController {
     status: 200,
     description: 'Get all transactions',
     type: TransactionListResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - you need to be signed in',
   })
   @Get()
   async getAllTransactions(
@@ -61,7 +67,7 @@ export class TransactionController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: Session,
   ) {
-    return this.transactionService.getTransactionById(
+    return this.transactionService.getById(
       id,
       user.id,
       user.publicRoles,
@@ -79,11 +85,18 @@ export class TransactionController {
     description: 'Invalid input data',
   })
   @Post()
+  @Roles(PrivateRole.ADMIN, PrivateRole.USER)
   @HttpCode(HttpStatus.CREATED)
   async createTransaction(
     @Body() createTransactionDto: CreateTransactionRequestDto,
+    @CurrentUser() user: Session,
   ): Promise<TransactionResponseDto> {
-    return this.transactionService.create(createTransactionDto);
+    return this.transactionService.create(
+      createTransactionDto,
+      user.id,
+      user.publicRoles,
+      user.privateRoles,
+    );
   }
 
   @ApiResponse({
@@ -100,11 +113,19 @@ export class TransactionController {
     description: 'Transaction not found',
   })
   @Put(':id')
+  @Roles(PrivateRole.ADMIN)
   async updateTransaction(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateTransactionDto: UpdateTransactionRequestDto,
+    @CurrentUser() user: Session,
   ): Promise<TransactionResponseDto> {
-    return this.transactionService.updateById(id, updateTransactionDto);
+    return this.transactionService.updateById(
+      id,
+      updateTransactionDto,
+      user.id,
+      user.publicRoles,
+      user.privateRoles,
+    );
   }
 
   @ApiResponse({
@@ -116,6 +137,7 @@ export class TransactionController {
     description: 'Transaction not found',
   })
   @Delete(':id')
+  @Roles(PrivateRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteTransaction(
     @Param('id', ParseIntPipe) id: number,
