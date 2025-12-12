@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import {
   CreateWalletRequestDto,
@@ -17,37 +18,39 @@ import {
   PublicWalletResponseDto,
 } from './wallet.dto';
 import { WalletService } from './wallet.service';
-import { PrivateRole, PublicRole } from '../auth/roles';
+import { PrivateRole } from '../auth/roles';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { type Session } from '../types/auth';
 
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
+import { CheckUserAccessGuard } from '../auth/guards/userAcces.guard';
+import { TransactionService } from '../transaction/transaction.service';
 
 @Controller('wallets')
 export class WalletController {
-  constructor(private readonly walletService: WalletService) {}
+  constructor(
+    private readonly walletService: WalletService,
+    private readonly transactionService: TransactionService,
+  ) {}
 
   @Get()
-  @Roles(PrivateRole.ADMIN, PublicRole.CUSTOMER)
-  async getAllWallets(
-    @CurrentUser() user: Session,
-  ): Promise<WalletListResponseDto> {
-    const roles = [...user.privateRoles, ...user.publicRoles];
-    return this.walletService.getAll(user.id, roles);
+  @Roles(PrivateRole.ADMIN)
+  async getAllWallets(): Promise<WalletListResponseDto> {
+    return this.walletService.getAll();
   }
 
   @Get(':id')
-  @Roles(PrivateRole.ADMIN, PublicRole.CUSTOMER)
+  @UseGuards(CheckUserAccessGuard)
   async getWalletById(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) walletId: number,
     @CurrentUser() user: Session,
   ): Promise<PublicWalletResponseDto> {
     const roles = [...user.privateRoles, ...user.publicRoles];
-    return this.walletService.getById(id, roles);
+    return this.walletService.getById(user.id, walletId, roles);
   }
 
   @Post()
-  @Roles(PrivateRole.ADMIN, PublicRole.CUSTOMER)
+  @UseGuards(CheckUserAccessGuard)
   @HttpCode(HttpStatus.CREATED)
   async createWallet(
     @Body() createWalletDto: CreateWalletRequestDto,
@@ -58,27 +61,43 @@ export class WalletController {
   }
 
   @Put(':id')
-  @Roles(PrivateRole.ADMIN, PublicRole.CUSTOMER)
+  @UseGuards(CheckUserAccessGuard)
   async updateWallet(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) walletId: number,
     @Body() updateWalletDto: UpdateWalletRequestDto,
     @CurrentUser() user: Session,
   ): Promise<PublicWalletResponseDto> {
     const roles = [...user.privateRoles, ...user.publicRoles];
-    return this.walletService.updateById(id, updateWalletDto, roles);
+    return this.walletService.updateById(
+      user.id,
+      walletId,
+      updateWalletDto,
+      roles,
+    );
   }
 
   @Delete(':id')
-  @Roles(PrivateRole.ADMIN, PublicRole.CUSTOMER)
+  @UseGuards(CheckUserAccessGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteWallet(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.walletService.deleteById(id);
+  async deleteWallet(
+    @Param('id', ParseIntPipe) walletId: number,
+    @CurrentUser() user: Session,
+  ): Promise<void> {
+    const roles = [...user.privateRoles, ...user.publicRoles];
+    return this.walletService.deleteById(user.id, walletId, roles);
   }
 
-  // @Get('/:id/transactions')
-  // async getTransactionsbyWalletId(
-  //   @Param('id', ParseIntPipe) id: number,
-  // ): Promise<TransactionResponseDto[]> {
-  //   return await this.walletService.getTransactionByWalletId(id);
-  // }
+  @Get(':id/transactions')
+  @UseGuards(CheckUserAccessGuard)
+  async getTransactionsByWalletId(
+    @Param('id', ParseIntPipe) walletId: number,
+    @CurrentUser() user: Session,
+  ) {
+    const roles = [...user.privateRoles, ...user.publicRoles];
+    return this.transactionService.getTransactionsByWalletId(
+      user.id,
+      walletId,
+      roles,
+    );
+  }
 }

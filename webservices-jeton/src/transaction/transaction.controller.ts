@@ -43,14 +43,8 @@ export class TransactionController {
     description: 'Unauthorized - you need to be signed in',
   })
   @Get()
-  async getAllTransactions(
-    @CurrentUser() user: Session,
-  ): Promise<TransactionListResponseDto> {
-    return await this.transactionService.getAll(
-      user.id,
-      user.publicRoles,
-      user.privateRoles,
-    );
+  async getAllTransactions(): Promise<TransactionListResponseDto> {
+    return await this.transactionService.getAll();
   }
 
   @ApiResponse({
@@ -144,4 +138,11 @@ export class TransactionController {
   ): Promise<void> {
     return this.transactionService.deleteById(id);
   }
+
+  // @Get('/:id/transactions')
+  // async getTransactionsbyWalletId(
+  //   @Param('id', ParseIntPipe) id: number,
+  // ): Promise<TransactionResponseDto[]> {
+  //   return await this.walletService.getTransactionByWalletId(id);
+  // }
 }

@@ -62,95 +62,82 @@ Vendor 1--* Transaction
 ## Stap 2: endpoints definiëren
 
 ## Users
-| Method | Endpoint | Description | Werkt |
-|--------|-----------|--------------|-----|
-| GET | /api/users | Get all users | ✅ |
-| GET | /api/users/:id | Get one user by ID | ✅ | 
-| PUT | /api/users/:id | Update a user | ✅ |
-| POST | /api/users | Add user | ✅ |
-| DELETE | /api/users/:id | Delete a user | ✅ |
+| Method | Endpoint | Description | ADMIN | USER | CUSTOMER | ORGANISER | VENDOR | Status |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| GET | `/api/users` | Get all users | ✔️ | | | | | ✅ |
+| GET | `/api/users/:id` | Get one user by ID | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| PUT | `/api/users/:id` | Update a user | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| POST | `/api/users` | Add user | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| DELETE | `/api/users/:id` | Delete a user | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| GET | `/api/users/:id/wallets` | Get all wallets from user | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
 
-### Navragen
-| Method | Endpoint | Description | Werkt |
-|--------|-----------|--------------|-----|
-| GET | /api/users/:id/vendors | Get vendor profile for this user (if role = vendor) | ❌ |
-| GET | /api/users/:id/organiser | Get organiser profile for this user (if role = organiser) | ❌ |
-| GET | /api/users/:id/wallets | Get all wallets belonging to this user (if role = customer) | ❌ |
 
 ---
+
 ## Session
-| Method | Endpoint | Description | Werkt |
-|--------|-----------|--------------|-----|
-| POST | /api/sessions/ Login as user |  ✅ |
----
-
-## Events
-| Method | Endpoint | Description | Werkt |
-|--------|-----------|--------------|-----|
-| GET | /api/events | Get all events | ✅ |
-| GET | /api/events/:id | Get one event by ID | ✅ |
-| POST | /api/events | Create a new event (requires organiserId) | ✅ |
-| PUT | /api/events/:id | Update an event | ✅ |
-| DELETE | /api/events/:id | Delete an event | ✅ | 
-| GET | /api/events/:id/wallets | Get all wallets for this event | ❓ | (moet value verborgen zijn)
-| GET | /api/events/:id/organiser | Get organiser for this event | ❓ |
+| Method | Endpoint | Description | ADMIN | USER | CUSTOMER | ORGANISER | VENDOR | Status |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| POST | `/api/sessions` | Login as user | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
 
 ---
 
-## Wallets
-| Method | Endpoint | Description | Werkt |
-|--------|-----------|--------------|-----|
-| GET | /api/wallets | Get all wallets | ✅ |
-| GET | /api/wallets/:id | Get one wallet by ID | ✅ |
-| POST | /api/wallets | Create a new wallet | ✅ |
-| PUT | /api/wallets/:id | Update wallet (value, state...) | ✅ |
-| DELETE | /api/wallets/:id | Delete a wallet | ✅ |
-| GET | /api/wallets/:id/transactions | Get all transactions for this wallet | ✅ |
-| POST | /api/wallets/:id/transactions | Create a transaction | ❓ |
+## EventController
+| Method | Endpoint | Description | ADMIN | USER | CUSTOMER | ORGANISER | VENDOR | Status |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| GET | `/api/events` | Get all events | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| GET | `/api/events/:id` | Get one event by ID | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| POST | `/api/events` | Create a new event | ✔️ | | | ✔️ | | ✅ |
+| PUT | `/api/events/:id` | Update an event | ✔️ | | | ✔️ | | ✅ |
+| DELETE | `/api/events/:id` | Delete an event | ✔️ | | | ✔️ | | ✅ |
+| GET | `/api/events/:id/wallets` | Get all wallets for this event | ✔️ | | | ✔️ | | ✅ |
+| GET | `/api/events/:id/transactions` | Get all wallets for this event | ✔️ | | | ✔️ | | ❓ |
+
 
 ---
 
-## Transactions
-| Method | Endpoint | Description  Werkt |
-|--------|-----------|--------------|-----|
-| GET | /api/transactions | Get all transactions | ✅ |
-| GET | /api/transactions/:id | Get one transaction by ID | ✅ |
-| POST | /api/transactions | Create a transaction | ✅ |
-| PUT | /api/transactions/:id | Update a transaction | ❓ |
-| DELETE | /api/transactions/:id | Delete a transaction | ✅ |
+## OrganiserController
+| Method | Endpoint | Description | ADMIN | USER | CUSTOMER | ORGANISER | VENDOR | Status |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| GET | `/api/organisers` | Get all organisers | ✔️ | | | | | ✅ |
+| GET | `/api/organisers/:id` | Get one organiser by ID | ✔️ | | | ✔️ | | ✅ |
+| PUT | `/api/organisers/:id` | Update organiser | ✔️ | | | ✔️ | | ✅ |
+| GET | `/api/organisers/:id/events`| Get all events of this organiser | ✔️ | | | ✔️ | | ✅ |
 
 ---
 
-## Vendors
-| Method | Endpoint | Description | Werkt |
-|--------|-----------|--------------|-----|
-| GET | /api/vendors | Get all vendors | ✅ |
-| GET | /api/vendors/:id | Get one vendor by userID | ✅ |
-| PUT | /api/vendors/:id | Update vendor info | ✅ |
-| DELETE | /api/vendors/:id | Delete a vendor | ❓ |
-| GET | /api/vendors/:id/transactions | Get all transactions for this vendor | ✅ |
+## WalletController
+| Method | Endpoint | Description | ADMIN | USER | CUSTOMER | ORGANISER | VENDOR | Status |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| GET | `/api/wallets` | Get all wallets | ✔️ | | | | | ❓ |
+| GET | `/api/wallets/:id` | Get one wallet by ID | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❓ |
+| POST | `/api/wallets` | Create a new wallet | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❓ |
+| PUT | `/api/wallets/:id` | Update wallet (Top-up/State) | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❓ |
+| DELETE | `/api/wallets/:id` | Delete a wallet | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❓ |
+| GET | `/api/wallets/:id/transactions`| Get transactions for this wallet | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❓ |
+
 
 ---
 
-## Organisers
-| Method | Endpoint | Description | Werkt |
-|--------|-----------|--------------|-----|
-| GET | /api/organisers | Get all organisers | ✅ |
-| GET | /api/organisers/:id | Get one organiser by ID | ✅ |
-| PUT | /api/organisers/:id | Update organiser | ✅ |
-| DELETE | /api/organisers/:id | Delete organiser | ❓ |
-| GET | /api/organisers/:id/events | Get all events created by this organiser | ✅ |
+## TransactionController
+| Method | Endpoint | Description | ADMIN | USER | CUSTOMER | ORGANISER | VENDOR | Status |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| GET | `/api/transactions` | Get all transactions | ✔️ | | | | | ❓ |
+| GET | `/api/transactions/:id` | Get one transaction by ID | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❓ |
+| POST | `/api/transactions` | Create a transaction (Payment) | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❓ |
+| PUT | `/api/transactions/:id` | Update a transaction | ✔️ | | | | | ❓ |
+| DELETE | `/api/transactions/:id` | Delete a transaction | ✔️ | | | | | ❓ |
+
 
 ---
 
-# Extra functional endpoints (optioneel)
-| Method | Endpoint | Description |
-|--------|-----------|--------------|
-| POST | /api/wallets/:id/topup | Add tokens to a wallet |
-| POST | /api/wallets/:id/spend | Spend tokens |
-| GET | /api/events/:id/summary | Get event summary (wallets, value, etc.) |
-| GET | /api/vendors/:id/summary | Get vendor earnings summary |
-
+## VendorController
+| Method | Endpoint | Description | ADMIN | USER | CUSTOMER | ORGANISER | VENDOR | Status |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| GET | `/api/vendors` | Get all vendors | ✔️ | | | | | ❓ |
+| GET | `/api/vendors/:id` | Get one vendor by userID | ✔️ | | | | ✔️ | ❓ |
+| PUT | `/api/vendors/:id` | Update vendor info | ✔️ | | | | ✔️ | ❓ |
+| DELETE | `/api/vendors/:id` | Delete a vendor | ✔️ | | | | ✔️ | ❓ |
+| GET | `/api/vendors/:id/transactions`| Get transactions for this vendor | ✔️ | | | | ✔️ | ❓ |
 
 
 

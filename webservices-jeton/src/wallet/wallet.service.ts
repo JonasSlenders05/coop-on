@@ -10,21 +10,27 @@ import {
   WalletListResponseDto,
   PublicWalletResponseDto,
 } from './wallet.dto';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class WalletService {
   constructor(@InjectDrizzle() private readonly db: DatabaseProvider) {}
 
-  async getAll(
-    userId: number,
-    roles: string[],
-  ): Promise<WalletListResponseDto> {
-    const isAdmin = roles.includes('admin');
-
+  async getAll(): Promise<WalletListResponseDto> {
     const walletList = await this.db.query.wallets.findMany({
-      where: isAdmin ? undefined : eq(wallets.userId, userId),
+      with: {
+        user: {
+          columns: {
+            email: true,
+          },
+        },
+        event: {
+          columns: {
+            name: true,
+          },
+        },
+      },
     });
 
     const items = walletList.map((wallet) =>
@@ -35,14 +41,28 @@ export class WalletService {
     return { items };
   }
 
-  async getById(id: number, roles: string[]): Promise<PublicWalletResponseDto> {
+  async getById(
+    currentUserId: number,
+    walletId: number,
+    roles: string[],
+  ): Promise<PublicWalletResponseDto> {
     const isAdmin = roles.includes('admin');
 
     const wallet = await this.db.query.wallets.findFirst({
-      where: isAdmin ? undefined : eq(wallets.id, id),
+      where: isAdmin
+        ? eq(wallets.id, walletId)
+        : and(eq(wallets.id, walletId), eq(wallets.userId, currentUserId)),
       with: {
-        user: true,
-        event: true,
+        user: {
+          columns: {
+            email: true,
+          },
+        },
+        event: {
+          columns: {
+            name: true,
+          },
+        },
       },
     });
 
@@ -56,84 +76,122 @@ export class WalletService {
   }
 
   async create(
-    wallet: CreateWalletRequestDto,
+    createWalletDto: CreateWalletRequestDto,
     userId: number,
     roles: string[],
   ): Promise<PublicWalletResponseDto> {
     const [newWallet] = await this.db
       .insert(wallets)
       .values({
-        ...wallet,
+        ...createWalletDto,
         userId: userId,
       })
       .$returningId();
 
-    return this.getById(newWallet.id, roles);
+    return this.getById(userId, newWallet.id, roles);
   }
 
   async updateById(
-    id: number,
+    currentUserId: number,
+    walletId: number,
     changes: UpdateWalletRequestDto,
     roles: string[],
   ): Promise<PublicWalletResponseDto> {
+    const isAdmin = roles.includes('admin');
+
     const [wallet] = await this.db
       .update(wallets)
       .set(changes)
-      .where(eq(wallets.id, id));
+      .where(
+        and(
+          eq(wallets.id, walletId),
+          isAdmin ? undefined : eq(wallets.userId, currentUserId),
+        ),
+      );
 
     if (!wallet) {
       throw new NotFoundException('No wallet with this id found');
     }
 
-    return this.getById(id, roles);
+    return this.getById(currentUserId, walletId, roles);
   }
 
-  async deleteById(id: number): Promise<void> {
-    const [result] = await this.db.delete(wallets).where(eq(wallets.id, id));
+  async deleteById(
+    currentUserId: number,
+    walletId: number,
+    roles: string[],
+  ): Promise<void> {
+    const isAdmin = roles.includes('admin');
+
+    const [result] = await this.db
+      .delete(wallets)
+      .where(
+        isAdmin
+          ? eq(wallets.id, currentUserId)
+          : and(eq(wallets.id, walletId), eq(wallets, currentUserId)),
+      );
     if (result.affectedRows === 0) {
       throw new NotFoundException('No wallet with this id found');
     }
   }
 
-  // async getWalletBycustomerId(
-  //   customerId: number,
-  // ): Promise<PublicWalletResponseDto> {
-  //   const wallet = await this.db.query.wallets.findFirst({
-  //     where: eq(wallets.userId, customerId),
-  //     with: {
-  //       user: true,
-  //       event: true,
-  //     },
-  //   });
+  //accec gecontrolleerd in eventservice
+  async getWalletsByEventId(
+    eventId: number,
+  ): Promise<PublicWalletResponseDto[]> {
+    const walletList = await this.db.query.wallets.findMany({
+      where: eq(wallets.eventId, eventId),
+      with: {
+        user: {
+          columns: {
+            email: true,
+          },
+        },
+        event: {
+          columns: {
+            name: true,
+          },
+        },
+      },
+    });
+    const items = walletList.map((wallet) =>
+      plainToInstance(PublicWalletResponseDto, wallet, {
+        excludeExtraneousValues: true,
+      }),
+    );
+    return items;
+  }
 
-  //   if (!wallet) {
-  //     throw new NotFoundException('No wallet with this id found');
-  //   }
+  async getWalletsByUserId(
+    currentUserId: number,
+    userId: number,
+    roles: string[],
+  ): Promise<PublicWalletResponseDto[]> {
+    const isAdmin = roles.includes('admin');
 
-  //   return plainToInstance(PublicWalletResponseDto, wallet, {
-  //     excludeExtraneousValues: true,
-  //   });
-  // }
+    const userWallets = await this.db.query.wallets.findMany({
+      where: isAdmin
+        ? eq(wallets.userId, userId)
+        : and(eq(wallets.userId, userId), eq(wallets.userId, currentUserId)),
 
-  // async getTransactionByWalletId(
-  //   walletId: number,
-  // ): Promise<TransactionResponseDto[]> {
-  //   const walletTransactions = await this.db.query.transactions.findMany({
-  //     where: eq(transactions.walletId, walletId),
-  //     with: {
-  //       wallet: true,
-  //       vendor: {
-  //         with: {
-  //           user: true,
-  //         },
-  //       },
-  //     },
-  //   });
+      with: {
+        user: {
+          columns: {
+            email: true,
+          },
+        },
+        event: {
+          columns: {
+            name: true,
+          },
+        },
+      },
+    });
 
-  //   return walletTransactions.map((tx) =>
-  //     plainToInstance(TransactionResponseDto, tx, {
-  //       excludeExtraneousValues: true,
-  //     }),
-  //   );
-  // }
+    return userWallets.map((wallet) =>
+      plainToInstance(PublicWalletResponseDto, wallet, {
+        excludeExtraneousValues: true,
+      }),
+    );
+  }
 }

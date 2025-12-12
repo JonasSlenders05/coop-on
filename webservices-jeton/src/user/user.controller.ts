@@ -31,6 +31,7 @@ import { ApiBearerAuth, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
 import { AuthDelayInterceptor } from '../auth/interceptors/authDelay.interceptor';
 import { ParseUserIdPipe } from '../auth/pipes/parseUserId.pipe';
+import { WalletService } from '../wallet/wallet.service';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -39,6 +40,7 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly authService: AuthService,
+    private readonly walletService: WalletService,
   ) {}
 
   //Get users
@@ -183,24 +185,16 @@ export class UserController {
     example: 'me',
   })
   @Get('/:id/wallets')
+  @UseGuards(CheckUserAccessGuard)
   async getWalletsByUserId(
     @Param('id', ParseUserIdPipe) id: 'me' | number,
     @CurrentUser() user: Session,
   ): Promise<PublicWalletResponseDto[]> {
-    return this.userService.getWalletsByUserId(id === 'me' ? user.id : id);
+    const roles = [...user.privateRoles, ...user.publicRoles];
+    return this.walletService.getWalletsByUserId(
+      user.id,
+      id === 'me' ? user.id : id,
+      roles,
+    );
   }
-
-  // @Get('/:id/vendors')
-  // async getVendorByUserId(
-  //   @Param('id', ParseUserIdPipe) id: number,
-  // ): Promise<PublicVendorResponseDto> {
-  //   return this.userService.getVendorByUserId(id);
-  // }
-
-  // @Get('/:id/organisers')
-  // async getOrganiserByUserId(
-  //   @Param('id', ParseUserIdPipe) id: number,
-  // ): Promise<OrganiserResponseDto> {
-  //   return this.userService.getOrganiserByUserId(id);
-  // }
 }

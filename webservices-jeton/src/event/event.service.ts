@@ -10,51 +10,71 @@ import {
   InjectDrizzle,
 } from '../drizzle/drizzle.provider';
 import { and, eq } from 'drizzle-orm';
-import { events, wallets } from '../drizzle/schema';
-import { PublicWalletResponseDto } from '../wallet/wallet.dto';
+import { events } from '../drizzle/schema';
 import { plainToInstance } from 'class-transformer';
-import { PrivateRole } from '../auth/roles';
 
 @Injectable()
 export class EventService {
   constructor(@InjectDrizzle() private readonly db: DatabaseProvider) {}
 
-  async getAll(id: number, roles: string[]): Promise<EventListResponseDto> {
-    const isAdmin = roles.includes('admin');
-
+  async getAll(): Promise<EventListResponseDto> {
     const items = await this.db.query.events.findMany({
-      where: isAdmin ? undefined : eq(events.organiserId, id),
+      with: {
+        organiser: true,
+      },
     });
-
-    return { items };
+    return {
+      items: items.map((item) =>
+        plainToInstance(EventResponseDto, item, {
+          excludeExtraneousValues: true,
+        }),
+      ),
+    };
   }
 
-  async getById(
-    id: number,
-    userId: number,
-    roles: string[],
-  ): Promise<EventResponseDto> {
-    const whereCondition = roles.includes(PrivateRole.ADMIN)
-      ? eq(events.id, id)
-      : and(eq(events.id, id), eq(events.organiserId, userId));
-
+  async getById(eventId: number): Promise<EventResponseDto> {
     const event = await this.db.query.events.findFirst({
-      where: whereCondition,
+      where: eq(events.id, eventId),
+      with: {
+        organiser: true,
+      },
     });
 
     if (!event) {
-      throw new NotFoundException({
-        message: 'No event with this id exists',
-      });
+      throw new NotFoundException('No event with this id exists');
     }
 
-    return event;
+    return plainToInstance(EventResponseDto, event, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  async verifyAcces(
+    eventId: number,
+    organiserId: number,
+    roles: string[],
+  ): Promise<EventResponseDto> {
+    const isAdmin = roles.includes('admin');
+
+    const event = await this.db.query.events.findFirst({
+      where: and(
+        eq(events.id, eventId),
+        isAdmin ? undefined : eq(events.organiserId, organiserId),
+      ),
+    });
+
+    if (!event) {
+      throw new NotFoundException('No event with this id found');
+    }
+
+    return plainToInstance(EventResponseDto, event, {
+      excludeExtraneousValues: true,
+    });
   }
 
   async create(
     organiserId: number,
     event: CreateEventRequestDto,
-    roles: string[],
   ): Promise<EventResponseDto> {
     const [newEvent] = await this.db
       .insert(events)
@@ -64,18 +84,30 @@ export class EventService {
       })
       .$returningId();
 
-    return this.getById(newEvent.id, organiserId, roles);
+    return this.getById(newEvent.id);
   }
 
   async updateById(
-    id: number,
+    eventId: number,
     changes: UpdateEventRequestDto,
     organiserId: number,
     roles: string[],
   ): Promise<EventResponseDto> {
-    await this.db.update(events).set(changes).where(eq(events.id, id));
+    const isAdmin = roles.includes('admin');
+    const [result] = await this.db
+      .update(events)
+      .set(changes)
+      .where(
+        and(
+          eq(events.id, eventId),
+          isAdmin ? undefined : eq(events.organiserId, organiserId),
+        ),
+      );
+    if (!result) {
+      throw new NotFoundException('No event with this id found');
+    }
 
-    return this.getById(id, organiserId, roles);
+    return this.verifyAcces(eventId, organiserId, roles);
   }
 
   async deleteById(
@@ -96,15 +128,27 @@ export class EventService {
     }
   }
 
-  async getWalletsByEvent(eventId: number): Promise<PublicWalletResponseDto[]> {
-    const eventWallets = await this.db.query.wallets.findMany({
-      where: eq(wallets.eventId, eventId),
+  async getEventsByOrganiserId(
+    currentUserId: number,
+    organiserId: number,
+    roles: string[],
+  ): Promise<EventResponseDto[]> {
+    const isAdmin = roles.includes('admin');
+
+    const eventsOfOrganiser = await this.db.query.events.findMany({
+      where: isAdmin
+        ? eq(events.organiserId, organiserId)
+        : and(
+            eq(events.organiserId, currentUserId),
+            eq(events.organiserId, organiserId),
+          ),
+      with: {
+        organiser: true,
+      },
     });
 
-    return eventWallets.map((wallet) =>
-      plainToInstance(PublicWalletResponseDto, wallet, {
-        excludeExtraneousValues: true,
-      }),
-    );
+    return plainToInstance(EventResponseDto, eventsOfOrganiser, {
+      excludeExtraneousValues: true,
+    });
   }
 }

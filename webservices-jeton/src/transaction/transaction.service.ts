@@ -15,7 +15,6 @@ import {
 } from './transaction.dto';
 import {
   events,
-  organisers,
   transactions,
   users,
   vendors,
@@ -25,54 +24,35 @@ import { and, eq, or, SQL } from 'drizzle-orm';
 import { PrivateRole, PublicRole } from '../auth/roles';
 import { plainToInstance } from 'class-transformer';
 import { WalletService } from '../wallet/wallet.service';
+import { EventService } from '../event/event.service';
 
 @Injectable()
 export class TransactionService {
   constructor(
     @InjectDrizzle() private readonly db: DatabaseProvider,
     private readonly walletService: WalletService,
+    private readonly eventService: EventService,
   ) {}
 
-  async getAll(
-    userId: number,
-    publicRole: string[] = [],
-    privateRole: string[] = [],
-  ): Promise<TransactionListResponseDto> {
-    const isAdmin = privateRole.includes(PrivateRole.ADMIN);
-    const isVendor = publicRole.includes(PublicRole.VENDOR);
-    const isCustomer = publicRole.includes(PublicRole.CUSTOMER);
-    const isOrganiser = publicRole.includes(PublicRole.ORGANISER);
+  async getAll(): Promise<TransactionListResponseDto> {
+    const items = await this.db.query.transactions.findMany({
+      with: {
+        wallet: true,
+        vendor: {
+          with: {
+            user: true,
+          },
+        },
+      },
+    });
 
-    const conditions: SQL<unknown>[] = [];
-
-    if (isAdmin) {
-      // geen filter
-    } else if (isVendor) {
-      conditions.push(eq(transactions.vendorId, userId));
-    } else if (isCustomer) {
-      conditions.push(eq(wallets.userId, userId));
-    } else if (isOrganiser) {
-      conditions.push(eq(organisers.userId, userId));
-    } else {
-      throw new ForbiddenException('No valid role for viewing transactions');
-    }
-
-    const result = await this.db
-      .select({
-        id: transactions.id,
-        date: transactions.date,
-        amount: transactions.amount,
-        walletId: transactions.walletId,
-        vendorId: transactions.vendorId,
-        eventId: transactions.eventId,
-      })
-      .from(transactions)
-      .leftJoin(wallets, eq(transactions.walletId, wallets.id))
-      .leftJoin(events, eq(wallets.eventId, events.id))
-      .leftJoin(organisers, eq(events.organiserId, organisers.userId))
-      .where(conditions.length > 0 ? and(...conditions) : undefined);
-
-    return { items: result };
+    return {
+      items: items.map((item) =>
+        plainToInstance(TransactionResponseDto, item, {
+          excludeExtraneousValues: true,
+        }),
+      ),
+    };
   }
 
   async getById(
@@ -150,7 +130,11 @@ export class TransactionService {
     privateRoles: string[],
   ): Promise<TransactionResponseDto> {
     const roles = [...publicRoles, ...privateRoles];
-    const wallet = await this.walletService.getById(dto.walletId, roles);
+    const wallet = await this.walletService.getById(
+      userId,
+      dto.walletId,
+      roles,
+    );
     const [newTransaction] = await this.db
       .insert(transactions)
       .values({
@@ -191,5 +175,78 @@ export class TransactionService {
     if (result.affectedRows === 0) {
       throw new NotFoundException('No transaction with this id exists');
     }
+  }
+
+  async getTransactionsByWalletId(
+    currentUserId: number,
+    walletId: number,
+    roles: string[],
+  ): Promise<TransactionResponseDto[]> {
+    await this.walletService.getById(currentUserId, walletId, roles);
+
+    const walletTransactions = await this.db.query.transactions.findMany({
+      where: eq(transactions.walletId, walletId),
+      with: {
+        wallet: true,
+        vendor: {
+          with: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    return walletTransactions.map((transaction) =>
+      plainToInstance(TransactionResponseDto, transaction, {
+        excludeExtraneousValues: true,
+      }),
+    );
+  }
+
+  async getTransactionsByVendorId(
+    vendorId: number,
+  ): Promise<TransactionResponseDto[]> {
+    const walletTransactions = await this.db.query.transactions.findMany({
+      where: eq(transactions.vendorId, vendorId),
+      with: {
+        wallet: true,
+        vendor: {
+          with: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    return walletTransactions.map((transaction) =>
+      plainToInstance(TransactionResponseDto, transaction, {
+        excludeExtraneousValues: true,
+      }),
+    );
+  }
+
+  async getTransactionsByEventId(
+    currentUserId: number,
+    eventId: number,
+    roles: string[],
+  ): Promise<TransactionResponseDto[]> {
+    await this.eventService.verifyAcces(eventId, currentUserId, roles);
+
+    const eventTransactions = await this.db.query.transactions.findMany({
+      where: eq(transactions.eventId, eventId),
+      with: {
+        wallet: true,
+        vendor: {
+          with: {
+            user: true,
+          },
+        },
+      },
+    });
+    return eventTransactions.map((transaction) =>
+      plainToInstance(TransactionResponseDto, transaction, {
+        excludeExtraneousValues: true,
+      }),
+    );
   }
 }

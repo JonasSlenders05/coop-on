@@ -98,6 +98,7 @@ async function seedUsers() {
 async function seedOrganisers() {
   console.log('📋 Seeding organisers...');
   await db.insert(schema.organisers).values([
+    { userId: 1, organisation: 'coop-on' },
     { userId: 3, organisation: 'Pop Events' },
     { userId: 4, organisation: 'EDM Lights' },
   ]);

@@ -8,9 +8,8 @@ import {
   OrganiserResponseDto,
   UpdateOrganiserRequestDto,
 } from './organiser.dto';
-import { events, organisers } from '../drizzle/schema';
-import { eq } from 'drizzle-orm';
-import { EventResponseDto } from '../event/event.dto';
+import { organisers } from '../drizzle/schema';
+import { and, eq } from 'drizzle-orm';
 import { plainToInstance } from 'class-transformer';
 
 @Injectable()
@@ -31,9 +30,20 @@ export class OrganiserService {
     return { items };
   }
 
-  async getById(userId: number): Promise<OrganiserResponseDto> {
+  async getById(
+    currentUserId: number,
+    organiserId: number,
+    roles: string[],
+  ): Promise<OrganiserResponseDto> {
+    const isAdmin = roles.includes('admin');
+
     const organiser = await this.db.query.organisers.findFirst({
-      where: eq(organisers.userId, userId),
+      where: isAdmin
+        ? eq(organisers.userId, organiserId)
+        : and(
+            eq(organisers.userId, currentUserId),
+            eq(organisers.userId, organiserId),
+          ),
       with: {
         user: true,
       },
@@ -50,37 +60,32 @@ export class OrganiserService {
 
   async updateById(
     userId: number,
+    organiserId: number,
     changes: UpdateOrganiserRequestDto,
+    roles: string[],
   ): Promise<OrganiserResponseDto> {
+    const isAdmin = roles.includes('admin');
+
     const [organiser] = await this.db
       .update(organisers)
       .set(changes)
-      .where(eq(organisers.userId, userId));
+      .where(isAdmin ? undefined : eq(organisers.userId, organiserId));
+
     if (!organiser) {
       throw new NotFoundException('No organiser with this id exists');
     }
 
-    return this.getById(userId);
+    return this.getById(userId, organiserId, roles);
   }
 
-  async deleteById(userId: number): Promise<void> {
+  async deleteById(userId: number, roles: string[]): Promise<void> {
+    const isAdmin = roles.includes('admin');
+
     const [result] = await this.db
       .delete(organisers)
-      .where(eq(organisers.userId, userId));
+      .where(isAdmin ? undefined : eq(organisers.userId, userId));
     if (result.affectedRows === 0) {
       throw new NotFoundException('No organiser with this id exists');
     }
-  }
-
-  async getEventsByOrganiserId(
-    organiserId: number,
-  ): Promise<EventResponseDto[]> {
-    await this.getById(organiserId);
-
-    const eventsForOrganiser = await this.db.query.events.findMany({
-      where: eq(events.organiserId, organiserId),
-    });
-
-    return eventsForOrganiser;
   }
 }

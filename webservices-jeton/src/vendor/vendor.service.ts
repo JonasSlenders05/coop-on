@@ -8,9 +8,8 @@ import {
   UpdateVendorRequestDto,
   VendorListResponseDto,
 } from './vendor.dto';
-import { transactions, vendors } from '../drizzle/schema';
+import { vendors } from '../drizzle/schema';
 import { eq } from 'drizzle-orm';
-import { TransactionResponseDto } from '../transaction/transaction.dto';
 import { plainToInstance } from 'class-transformer';
 
 @Injectable()
@@ -71,14 +70,5 @@ export class VendorService {
     if (result.affectedRows === 0) {
       throw new NotFoundException('No event with this id exists');
     }
-  }
-
-  async getTransactionByVendorId(
-    vendorId: number,
-  ): Promise<TransactionResponseDto[]> {
-    const walletTransactions = await this.db.query.transactions.findMany({
-      where: eq(transactions.vendorId, vendorId),
-    });
-    return walletTransactions;
   }
 }

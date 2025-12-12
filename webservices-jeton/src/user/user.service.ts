@@ -8,10 +8,9 @@ import {
   type DatabaseProvider,
   InjectDrizzle,
 } from '../drizzle/drizzle.provider';
-import { users, wallets } from '../drizzle/schema';
+import { users } from '../drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { plainToInstance } from 'class-transformer';
-import { PublicWalletResponseDto } from '../wallet/wallet.dto';
 
 @Injectable()
 export class UserService {
@@ -67,60 +66,4 @@ export class UserService {
 
     return this.getById(id);
   }
-
-  async getWalletsByUserId(id: number): Promise<PublicWalletResponseDto[]> {
-    await this.getById(id);
-
-    const userWallets = await this.db.query.wallets.findMany({
-      where: eq(wallets.userId, id),
-      with: {
-        user: true,
-        event: true,
-      },
-    });
-
-    return userWallets.map((w) =>
-      plainToInstance(PublicWalletResponseDto, w, {
-        excludeExtraneousValues: true,
-      }),
-    );
-  }
-
-  // async getVendorByUserId(id: number): Promise<PublicVendorResponseDto> {
-  //   await this.getById(id);
-
-  //   const vendorUser = await this.db.query.vendors.findFirst({
-  //     where: eq(vendors.userId, id),
-  //     with: {
-  //       user: true,
-  //     },
-  //   });
-
-  //   if (!vendorUser) {
-  //     throw new NotFoundException('No vendor with this id exists');
-  //   }
-
-  //   return plainToInstance(PublicVendorResponseDto, vendorUser, {
-  //     excludeExtraneousValues: true,
-  //   });
-  // }
-
-  // async getOrganiserByUserId(id: number): Promise<OrganiserResponseDto> {
-  //   await this.getById(id);
-
-  //   const organiserUser = await this.db.query.vendors.findFirst({
-  //     where: eq(organisers.userId, id),
-  //     with: {
-  //       user: true,
-  //     },
-  //   });
-
-  //   if (!organiserUser) {
-  //     throw new NotFoundException('No organiser with this id exists');
-  //   }
-
-  //   return plainToInstance(OrganiserResponseDto, organiserUser, {
-  //     excludeExtraneousValues: true,
-  //   });
-  // }
 }

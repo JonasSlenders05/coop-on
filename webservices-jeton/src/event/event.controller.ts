@@ -23,6 +23,10 @@ import { PrivateRole, PublicRole } from '../auth/roles';
 import { PublicUserResponseDto } from '../user/user.dto';
 import { type Session } from '../types/auth';
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
+import { PublicWalletResponseDto } from '../wallet/wallet.dto';
+import { WalletService } from '../wallet/wallet.service';
+import { TransactionService } from '../transaction/transaction.service';
+import { TransactionResponseDto } from '../transaction/transaction.dto';
 
 @ApiTags('Events')
 @ApiBearerAuth()
@@ -32,7 +36,11 @@ import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 })
 @Controller('events')
 export class EventController {
-  constructor(private readonly eventService: EventService) {}
+  constructor(
+    private readonly eventService: EventService,
+    private readonly walletService: WalletService,
+    private readonly transactionService: TransactionService,
+  ) {}
 
   @ApiResponse({
     status: 200,
@@ -47,13 +55,10 @@ export class EventController {
     status: 403,
     description: 'Forbidden',
   })
-  @Roles(PrivateRole.ADMIN, PublicRole.ORGANISER)
+  @Roles(PrivateRole.ADMIN)
   @Get()
-  async getAllEvents(
-    @CurrentUser() user: Session,
-  ): Promise<EventListResponseDto> {
-    const roles = [...user.privateRoles, ...user.publicRoles];
-    return this.eventService.getAll(user.id, roles);
+  async getAllEvents(): Promise<EventListResponseDto> {
+    return this.eventService.getAll();
   }
 
   @ApiResponse({
@@ -65,13 +70,12 @@ export class EventController {
     status: 404,
     description: 'Event not found',
   })
+  @Roles(PrivateRole.ADMIN, PrivateRole.USER)
   @Get(':id')
   async getEventById(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: Session,
+    @Param('id', ParseIntPipe) eventId: number,
   ): Promise<EventResponseDto> {
-    const roles = [...user.privateRoles, ...user.publicRoles];
-    return this.eventService.getById(id, user.id, roles);
+    return this.eventService.getById(eventId);
   }
 
   @ApiResponse({
@@ -90,9 +94,7 @@ export class EventController {
     @CurrentUser() user: Session,
     @Body() createEventDto: CreateEventRequestDto,
   ): Promise<EventResponseDto> {
-    const roles = [...user.privateRoles, ...user.publicRoles];
-
-    return this.eventService.create(user.id, createEventDto, roles);
+    return this.eventService.create(user.id, createEventDto);
   }
 
   @ApiResponse({
@@ -119,12 +121,17 @@ export class EventController {
   @Roles(PrivateRole.ADMIN, PublicRole.ORGANISER)
   @Put(':id')
   async updateEvent(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) eventId: number,
     @Body() updateEventDto: UpdateEventRequestDto,
     @CurrentUser() user: Session,
   ): Promise<EventResponseDto> {
     const roles = [...user.privateRoles, ...user.publicRoles];
-    return this.eventService.updateById(id, updateEventDto, user.id, roles);
+    return this.eventService.updateById(
+      eventId,
+      updateEventDto,
+      user.id,
+      roles,
+    );
   }
 
   @ApiResponse({
@@ -140,23 +147,45 @@ export class EventController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteEvent(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) eventId: number,
     @CurrentUser() user: Session,
   ): Promise<void> {
     const roles = [...user.privateRoles, ...user.publicRoles];
-    return this.eventService.deleteById(id, user.id, roles);
+    return this.eventService.deleteById(eventId, user.id, roles);
   }
 
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Get wallets from event by eventID',
-  //   type: [PublicWalletResponseDto],
-  // })
-  // @Roles(PrivateRole.ADMIN, PublicRole.ORGANISER)
-  // @Get('/:id/wallets')
-  // async getWalletsByEvent(
-  //   @Param('id', ParseIntPipe) id: number,
-  // ): Promise<PublicWalletResponseDto[]> {
-  //   return await this.eventService.getWalletsByEvent(id);
-  // }
+  @ApiResponse({
+    status: 200,
+    description: 'Get wallets from event by eventID',
+    type: [PublicWalletResponseDto],
+  })
+  @Roles(PrivateRole.ADMIN, PublicRole.ORGANISER)
+  @Get('/:id/wallets')
+  async getWalletsByEvent(
+    @Param('id', ParseIntPipe) eventId: number,
+    @CurrentUser() user: Session,
+  ): Promise<PublicWalletResponseDto[]> {
+    const roles = [...user.privateRoles, ...user.publicRoles];
+    await this.eventService.verifyAcces(eventId, user.id, roles);
+    return await this.walletService.getWalletsByEventId(eventId);
+  }
+
+  @ApiResponse({
+    status: 200,
+    description: 'Get wallets from event by eventID',
+    type: [TransactionResponseDto],
+  })
+  @Roles(PrivateRole.ADMIN, PublicRole.ORGANISER)
+  @Get('/:id/transactions')
+  async getTransactionsByEvent(
+    @Param('id', ParseIntPipe) eventId: number,
+    @CurrentUser() user: Session,
+  ): Promise<TransactionResponseDto[]> {
+    const roles = [...user.privateRoles, ...user.publicRoles];
+    return await this.transactionService.getTransactionsByEventId(
+      user.id,
+      eventId,
+      roles,
+    );
+  }
 }

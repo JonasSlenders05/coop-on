@@ -13,6 +13,7 @@ export class PublicWalletResponseDto {
   @Expose()
   id: number;
 
+  @Expose()
   value: number;
 
   @Expose()
@@ -22,14 +23,14 @@ export class PublicWalletResponseDto {
   createdAt: Date;
 
   @Expose()
-  userId: number;
-
-  @Expose()
   eventId: number;
 
   @Expose()
   @Type(() => EventResponseDto)
   event: EventResponseDto;
+
+  @Expose()
+  userId: number;
 
   @Expose()
   @Type(() => PublicUserResponseDto)

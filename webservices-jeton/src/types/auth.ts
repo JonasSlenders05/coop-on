@@ -8,6 +8,7 @@ export interface JwtPayload {
 export interface Session {
   id: number;
   email: string;
+  organiserId?: number;
   publicRoles: string[];
   privateRoles: string[];
 }

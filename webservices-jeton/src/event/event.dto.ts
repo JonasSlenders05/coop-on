@@ -8,6 +8,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { PublicWalletResponseDto } from '../wallet/wallet.dto';
+import { OrganiserResponseDto } from '../organiser/organiser.dto';
 
 export class CreateEventRequestDto {
   @ApiProperty({ example: 'Loon', description: 'Name of the event' })
@@ -68,6 +69,8 @@ export class EventResponseDto {
   startDate: Date;
   @Expose()
   endDate: Date;
+  @Expose()
+  organiser: OrganiserResponseDto;
 }
 
 export class EventListResponseDto {
