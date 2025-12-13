@@ -156,7 +156,7 @@ export class EventController {
     @CurrentUser() user: Session,
   ): Promise<void> {
     const roles = [...user.privateRoles, ...user.publicRoles];
-    return this.eventService.deleteById(eventId, user.id, roles);
+    return this.eventService.deleteById(user.id, eventId, roles);
   }
 
   @ApiResponse({
@@ -171,7 +171,7 @@ export class EventController {
     @CurrentUser() user: Session,
   ): Promise<PublicWalletResponseDto[]> {
     const roles = [...user.privateRoles, ...user.publicRoles];
-    await this.eventService.verifyAcces(eventId, user.id, roles);
+    await this.eventService.verifyAcces(user.id, eventId, roles);
     return await this.walletService.getWalletsByEventId(eventId);
   }
 

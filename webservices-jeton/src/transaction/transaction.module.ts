@@ -11,7 +11,7 @@ import { WalletModule } from '../wallet/wallet.module';
     DrizzleModule,
     forwardRef(() => WalletModule),
     forwardRef(() => EventModule),
-    VendorModule,
+    forwardRef(() => VendorModule),
   ],
   controllers: [TransactionController],
   providers: [TransactionService],

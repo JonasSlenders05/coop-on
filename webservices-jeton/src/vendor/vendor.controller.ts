@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  forwardRef,
+  Get,
+  Inject,
+  Param,
+  ParseIntPipe,
+  Put,
+} from '@nestjs/common';
 import {
   PublicVendorResponseDto,
   UpdateVendorRequestDto,
@@ -11,6 +20,8 @@ import { PrivateRole, PublicRole } from '../auth/roles';
 import { ParseUserIdPipe } from '../auth/pipes/parseUserId.pipe';
 import { type Session } from '../types/auth';
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
+import { TransactionResponseDto } from '../transaction/transaction.dto';
+import { TransactionService } from '../transaction/transaction.service';
 
 @ApiTags('Vendors')
 @ApiBearerAuth()
@@ -20,7 +31,11 @@ import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 })
 @Controller('vendors')
 export class VendorController {
-  constructor(private readonly vendorService: VendorService) {}
+  constructor(
+    private readonly vendorService: VendorService,
+    @Inject(forwardRef(() => TransactionService))
+    private readonly transactionService: TransactionService,
+  ) {}
 
   @ApiResponse({
     status: 200,
@@ -52,12 +67,11 @@ export class VendorController {
     example: 'me',
   })
   @Get(':id')
+  @Roles(PrivateRole.ADMIN, PrivateRole.USER)
   async getVendorById(
-    @Param('id', ParseUserIdPipe) id: number | 'me',
-    @CurrentUser() user: Session,
+    @Param('id', ParseIntPipe) vendorId: number,
   ): Promise<PublicVendorResponseDto> {
-    const userId = id === 'me' ? user.id : id;
-    return this.vendorService.getById(userId);
+    return this.vendorService.getById(vendorId);
   }
 
   @ApiResponse({
@@ -81,20 +95,29 @@ export class VendorController {
     @CurrentUser() user: Session,
     @Body() updateVendorDto: UpdateVendorRequestDto,
   ): Promise<PublicVendorResponseDto> {
-    const userId = id === 'me' ? user.id : id;
-    return this.vendorService.updateById(userId, updateVendorDto);
+    const vendorId = id === 'me' ? user.id : id;
+    const roles = [...user.privateRoles, ...user.publicRoles];
+    return this.vendorService.updateById(
+      user.id,
+      vendorId,
+      updateVendorDto,
+      roles,
+    );
   }
 
-  // @Delete(':id')
-  // @HttpCode(HttpStatus.NO_CONTENT)
-  // async deleteVendor(@Param('id', ParseIntPipe) id: number): Promise<void> {
-  //   return this.vendorService.deleteById(id);
-  // }
+  @Get('/:id/transactions')
+  @Roles(PrivateRole.ADMIN, PublicRole.VENDOR)
+  async getTransactionsbyVendorId(
+    @Param('id', ParseUserIdPipe) id: number | 'me',
+    @CurrentUser() user: Session,
+  ): Promise<TransactionResponseDto[]> {
+    const roles = [...user.privateRoles, ...user.publicRoles];
+    const vendorId = id === 'me' ? user.id : id;
 
-  // @Get('/:id/transactions')
-  // async getTransactionsbyWalletId(
-  //   @Param('id', ParseIntPipe) id: number,
-  // ): Promise<TransactionResponseDto[]> {
-  //   return await this.vendorService.getTransactionByVendorId(id);
-  // }
+    return await this.transactionService.getTransactionsByVendorId(
+      user.id,
+      vendorId,
+      roles,
+    );
+  }
 }

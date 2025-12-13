@@ -121,11 +121,11 @@ Vendor 1--* Transaction
 ## TransactionController
 | Method | Endpoint | Description | ADMIN | USER | CUSTOMER | ORGANISER | VENDOR | Status |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| GET | `/api/transactions` | Get all transactions | ✔️ | | | | | ❓ |
-| GET | `/api/transactions/:id` | Get one transaction by ID | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❓ |
-| POST | `/api/transactions` | Create a transaction (Payment) | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❓ |
-| PUT | `/api/transactions/:id` | Update a transaction | ✔️ | | | | | ❓ |
-| DELETE | `/api/transactions/:id` | Delete a transaction | ✔️ | | | | | ❓ |
+| GET | `/api/transactions` | Get all transactions | ✔️ | | | | | ✅ |
+| GET | `/api/transactions/:id` | Get one transaction by ID | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| POST | `/api/transactions` | Create a transaction (Payment) | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| PUT | `/api/transactions/:id` | Update a transaction | ✔️ | | | | | ✅ |
+| DELETE | `/api/transactions/:id` | Delete a transaction | ✔️ | | | | | ✅ |
 
 
 ---
@@ -133,11 +133,10 @@ Vendor 1--* Transaction
 ## VendorController
 | Method | Endpoint | Description | ADMIN | USER | CUSTOMER | ORGANISER | VENDOR | Status |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| GET | `/api/vendors` | Get all vendors | ✔️ | | | | | ❓ |
-| GET | `/api/vendors/:id` | Get one vendor by userID | ✔️ | | | | ✔️ | ❓ |
-| PUT | `/api/vendors/:id` | Update vendor info | ✔️ | | | | ✔️ | ❓ |
-| DELETE | `/api/vendors/:id` | Delete a vendor | ✔️ | | | | ✔️ | ❓ |
-| GET | `/api/vendors/:id/transactions`| Get transactions for this vendor | ✔️ | | | | ✔️ | ❓ |
+| GET | `/api/vendors` | Get all vendors | ✔️ | | | | | ✅ |
+| GET | `/api/vendors/:id` | Get one vendor by userID | ✔️ | | | | ✔️ | ✅ |
+| PUT | `/api/vendors/:id` | Update vendor info | ✔️ | | | | ✔️ | ✅ |
+| GET | `/api/vendors/:id/transactions`| Get transactions for this vendor | ✔️ | | | | ✔️ | ✅ |
 
 
 

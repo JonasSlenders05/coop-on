@@ -171,6 +171,8 @@ export class TransactionService {
     vendorId: number,
     roles: string[],
   ): Promise<TransactionResponseDto[]> {
+    await this.vendorService.verifyAcces(currentUserId, vendorId, roles);
+
     const isAdmin = roles.includes(PrivateRole.ADMIN);
 
     const walletTransactions = await this.db.query.transactions.findMany({

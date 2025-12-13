@@ -50,29 +50,6 @@ export class EventService {
     });
   }
 
-  async verifyAcces(
-    eventId: number,
-    organiserId: number,
-    roles: string[],
-  ): Promise<EventResponseDto> {
-    const isAdmin = roles.includes(PrivateRole.ADMIN);
-
-    const event = await this.db.query.events.findFirst({
-      where: and(
-        eq(events.id, eventId),
-        isAdmin ? undefined : eq(events.organiserId, organiserId),
-      ),
-    });
-
-    if (!event) {
-      throw new NotFoundException('No event with this id found');
-    }
-
-    return plainToInstance(EventResponseDto, event, {
-      excludeExtraneousValues: true,
-    });
-  }
-
   async create(
     organiserId: number,
     event: CreateEventRequestDto,
@@ -94,6 +71,8 @@ export class EventService {
     organiserId: number,
     roles: string[],
   ): Promise<EventResponseDto> {
+    await this.verifyAcces(organiserId, eventId, roles);
+
     const isAdmin = roles.includes(PrivateRole.ADMIN);
     const [result] = await this.db
       .update(events)
@@ -108,19 +87,21 @@ export class EventService {
       throw new NotFoundException('No event with this id found');
     }
 
-    return this.verifyAcces(eventId, organiserId, roles);
+    return this.getById(eventId);
   }
 
   async deleteById(
-    id: number,
-    organiserId: number,
+    currentUserId: number,
+    eventId: number,
     roles: string[],
   ): Promise<void> {
+    await this.verifyAcces(currentUserId, eventId, roles);
+
     const isAdmin = roles.includes(PrivateRole.ADMIN);
 
     const whereClause = isAdmin
-      ? eq(events.id, id)
-      : and(eq(events.id, id), eq(events.organiserId, organiserId));
+      ? eq(events.id, eventId)
+      : and(eq(events.id, eventId), eq(events.organiserId, currentUserId));
 
     const result = await this.db.delete(events).where(whereClause);
 
@@ -151,5 +132,24 @@ export class EventService {
     return plainToInstance(EventResponseDto, eventsOfOrganiser, {
       excludeExtraneousValues: true,
     });
+  }
+
+  async verifyAcces(
+    currentUserId: number,
+    eventId: number,
+    roles: string[],
+  ): Promise<void> {
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
+
+    const event = await this.db.query.events.findFirst({
+      where: and(
+        eq(events.id, eventId),
+        isAdmin ? undefined : eq(events.organiserId, currentUserId),
+      ),
+    });
+
+    if (!event) {
+      throw new NotFoundException('No event with this id found');
+    }
   }
 }

@@ -9,8 +9,9 @@ import {
   VendorListResponseDto,
 } from './vendor.dto';
 import { vendors } from '../drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { plainToInstance } from 'class-transformer';
+import { PrivateRole } from '../auth/roles';
 
 @Injectable()
 export class VendorService {
@@ -48,27 +49,70 @@ export class VendorService {
   }
 
   async updateById(
-    userId: number,
+    currentUserId: number,
+    vendorId: number,
     changes: UpdateVendorRequestDto,
+    roles: string[],
   ): Promise<PublicVendorResponseDto> {
+    await this.verifyAcces(currentUserId, vendorId, roles);
+
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
+
     const [vendor] = await this.db
       .update(vendors)
       .set(changes)
-      .where(eq(vendors.userId, userId));
+      .where(
+        and(
+          isAdmin ? undefined : eq(vendors.userId, currentUserId),
+          eq(vendors.userId, vendorId),
+        ),
+      );
 
     if (!vendor) {
-      throw new NotFoundException(`Vendor ${userId} not found`);
+      throw new NotFoundException(`Vendor ${vendorId} not found`);
     }
 
-    return this.getById(userId);
+    return this.getById(currentUserId);
   }
 
-  async deleteById(userId: number): Promise<void> {
+  async deleteById(
+    currentUserId: number,
+    vendorId: number,
+    roles: string[],
+  ): Promise<void> {
+    await this.verifyAcces(currentUserId, vendorId, roles);
+
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
+
     const [result] = await this.db
       .delete(vendors)
-      .where(eq(vendors.userId, userId));
+      .where(
+        and(
+          isAdmin ? undefined : eq(vendors.userId, currentUserId),
+          eq(vendors.userId, vendorId),
+        ),
+      );
     if (result.affectedRows === 0) {
       throw new NotFoundException('No event with this id exists');
+    }
+  }
+
+  async verifyAcces(
+    currentUserId: number,
+    vendorId: number,
+    roles: string[],
+  ): Promise<void> {
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
+
+    const vendor = await this.db.query.vendors.findFirst({
+      where: and(
+        eq(vendors.userId, vendorId),
+        isAdmin ? undefined : eq(vendors.userId, currentUserId),
+      ),
+    });
+
+    if (!vendor) {
+      throw new NotFoundException('No vendor with this id found');
     }
   }
 }

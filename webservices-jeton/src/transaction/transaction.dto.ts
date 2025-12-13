@@ -1,5 +1,5 @@
 import { Expose, Type } from 'class-transformer';
-import { IsDate, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsDate, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 import { PublicVendorResponseDto } from '../vendor/vendor.dto';
 
 export class CreateTransactionRequestDto {
@@ -19,7 +19,25 @@ export class CreateTransactionRequestDto {
   walletId: number;
 }
 
-export class UpdateTransactionRequestDto extends CreateTransactionRequestDto {}
+export class UpdateTransactionRequestDto {
+  @IsNumber()
+  @IsOptional()
+  vendorId: number;
+
+  @Type(() => Date)
+  @IsDate()
+  @IsOptional()
+  date?: Date = new Date();
+
+  @IsNumber()
+  @IsNotEmpty()
+  @IsOptional()
+  amount: number;
+
+  @IsNumber()
+  @IsOptional()
+  walletId: number;
+}
 
 export class TransactionResponseDto {
   @Expose()
