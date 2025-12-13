@@ -38,11 +38,8 @@ export class TransactionController {
     description: 'Get all transactions',
     type: TransactionListResponseDto,
   })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - you need to be signed in',
-  })
   @Get()
+  @Roles(PrivateRole.ADMIN)
   async getAllTransactions(): Promise<TransactionListResponseDto> {
     return await this.transactionService.getAll();
   }
@@ -57,16 +54,13 @@ export class TransactionController {
     description: 'Transaction not found',
   })
   @Get(':id')
+  @Roles(PrivateRole.ADMIN, PrivateRole.USER)
   async getById(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: Session,
   ) {
-    return this.transactionService.getById(
-      id,
-      user.id,
-      user.publicRoles,
-      user.privateRoles,
-    );
+    const roles = [...user.privateRoles, ...user.publicRoles];
+    return this.transactionService.getById(id, user.id, roles);
   }
 
   @ApiResponse({
@@ -85,12 +79,8 @@ export class TransactionController {
     @Body() createTransactionDto: CreateTransactionRequestDto,
     @CurrentUser() user: Session,
   ): Promise<TransactionResponseDto> {
-    return this.transactionService.create(
-      createTransactionDto,
-      user.id,
-      user.publicRoles,
-      user.privateRoles,
-    );
+    const roles = [...user.privateRoles, ...user.publicRoles];
+    return this.transactionService.create(createTransactionDto, user.id, roles);
   }
 
   @ApiResponse({
@@ -113,12 +103,12 @@ export class TransactionController {
     @Body() updateTransactionDto: UpdateTransactionRequestDto,
     @CurrentUser() user: Session,
   ): Promise<TransactionResponseDto> {
+    const roles = [...user.privateRoles, ...user.publicRoles];
     return this.transactionService.updateById(
       id,
       updateTransactionDto,
       user.id,
-      user.publicRoles,
-      user.privateRoles,
+      roles,
     );
   }
 
@@ -138,11 +128,4 @@ export class TransactionController {
   ): Promise<void> {
     return this.transactionService.deleteById(id);
   }
-
-  // @Get('/:id/transactions')
-  // async getTransactionsbyWalletId(
-  //   @Param('id', ParseIntPipe) id: number,
-  // ): Promise<TransactionResponseDto[]> {
-  //   return await this.walletService.getTransactionByWalletId(id);
-  // }
 }

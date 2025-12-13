@@ -12,6 +12,7 @@ import {
 } from './wallet.dto';
 import { and, eq } from 'drizzle-orm';
 import { plainToInstance } from 'class-transformer';
+import { PrivateRole } from '../auth/roles';
 
 @Injectable()
 export class WalletService {
@@ -46,12 +47,13 @@ export class WalletService {
     walletId: number,
     roles: string[],
   ): Promise<PublicWalletResponseDto> {
-    const isAdmin = roles.includes('admin');
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
 
     const wallet = await this.db.query.wallets.findFirst({
-      where: isAdmin
-        ? eq(wallets.id, walletId)
-        : and(eq(wallets.id, walletId), eq(wallets.userId, currentUserId)),
+      where: and(
+        eq(wallets.id, walletId),
+        isAdmin ? undefined : eq(wallets.userId, currentUserId),
+      ),
       with: {
         user: {
           columns: {
@@ -97,7 +99,7 @@ export class WalletService {
     changes: UpdateWalletRequestDto,
     roles: string[],
   ): Promise<PublicWalletResponseDto> {
-    const isAdmin = roles.includes('admin');
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
 
     const [wallet] = await this.db
       .update(wallets)
@@ -121,7 +123,7 @@ export class WalletService {
     walletId: number,
     roles: string[],
   ): Promise<void> {
-    const isAdmin = roles.includes('admin');
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
 
     const [result] = await this.db
       .delete(wallets)
@@ -167,7 +169,7 @@ export class WalletService {
     userId: number,
     roles: string[],
   ): Promise<PublicWalletResponseDto[]> {
-    const isAdmin = roles.includes('admin');
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
 
     const userWallets = await this.db.query.wallets.findMany({
       where: isAdmin

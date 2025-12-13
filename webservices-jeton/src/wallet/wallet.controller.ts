@@ -2,14 +2,15 @@ import {
   Body,
   Controller,
   Delete,
+  forwardRef,
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   ParseIntPipe,
   Post,
   Put,
-  UseGuards,
 } from '@nestjs/common';
 import {
   CreateWalletRequestDto,
@@ -23,13 +24,20 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { type Session } from '../types/auth';
 
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
-import { CheckUserAccessGuard } from '../auth/guards/userAcces.guard';
 import { TransactionService } from '../transaction/transaction.service';
+import { ApiTags, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 
+@ApiTags('Wallets')
+@ApiBearerAuth()
+@ApiResponse({
+  status: 401,
+  description: 'Unauthorized - you need to be signed in',
+})
 @Controller('wallets')
 export class WalletController {
   constructor(
     private readonly walletService: WalletService,
+    @Inject(forwardRef(() => TransactionService))
     private readonly transactionService: TransactionService,
   ) {}
 
@@ -40,7 +48,7 @@ export class WalletController {
   }
 
   @Get(':id')
-  @UseGuards(CheckUserAccessGuard)
+  @Roles(PrivateRole.ADMIN, PrivateRole.USER)
   async getWalletById(
     @Param('id', ParseIntPipe) walletId: number,
     @CurrentUser() user: Session,
@@ -50,7 +58,7 @@ export class WalletController {
   }
 
   @Post()
-  @UseGuards(CheckUserAccessGuard)
+  @Roles(PrivateRole.ADMIN, PrivateRole.USER)
   @HttpCode(HttpStatus.CREATED)
   async createWallet(
     @Body() createWalletDto: CreateWalletRequestDto,
@@ -61,7 +69,7 @@ export class WalletController {
   }
 
   @Put(':id')
-  @UseGuards(CheckUserAccessGuard)
+  @Roles(PrivateRole.ADMIN, PrivateRole.USER)
   async updateWallet(
     @Param('id', ParseIntPipe) walletId: number,
     @Body() updateWalletDto: UpdateWalletRequestDto,
@@ -77,7 +85,7 @@ export class WalletController {
   }
 
   @Delete(':id')
-  @UseGuards(CheckUserAccessGuard)
+  @Roles(PrivateRole.ADMIN, PrivateRole.USER)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteWallet(
     @Param('id', ParseIntPipe) walletId: number,
@@ -88,7 +96,7 @@ export class WalletController {
   }
 
   @Get(':id/transactions')
-  @UseGuards(CheckUserAccessGuard)
+  @Roles(PrivateRole.ADMIN, PrivateRole.USER)
   async getTransactionsByWalletId(
     @Param('id', ParseIntPipe) walletId: number,
     @CurrentUser() user: Session,

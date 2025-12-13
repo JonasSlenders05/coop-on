@@ -108,12 +108,12 @@ Vendor 1--* Transaction
 ## WalletController
 | Method | Endpoint | Description | ADMIN | USER | CUSTOMER | ORGANISER | VENDOR | Status |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| GET | `/api/wallets` | Get all wallets | ✔️ | | | | | ❓ |
-| GET | `/api/wallets/:id` | Get one wallet by ID | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❓ |
-| POST | `/api/wallets` | Create a new wallet | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❓ |
-| PUT | `/api/wallets/:id` | Update wallet (Top-up/State) | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❓ |
-| DELETE | `/api/wallets/:id` | Delete a wallet | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❓ |
-| GET | `/api/wallets/:id/transactions`| Get transactions for this wallet | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❓ |
+| GET | `/api/wallets` | Get all wallets | ✔️ | | | | | ✅ |
+| GET | `/api/wallets/:id` | Get one wallet by ID | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| POST | `/api/wallets` | Create a new wallet | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| PUT | `/api/wallets/:id` | Update wallet | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| DELETE | `/api/wallets/:id` | Delete a wallet | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| GET | `/api/wallets/:id/transactions`| Get transactions for this wallet | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
 
 
 ---

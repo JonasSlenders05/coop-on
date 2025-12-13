@@ -1,14 +1,18 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { EventController } from './event.controller';
 import { EventService } from './event.service';
 import { DrizzleModule } from '../drizzle/drizzle.module';
-import { WalletService } from '../wallet/wallet.service';
-import { TransactionService } from '../transaction/transaction.service';
+import { TransactionModule } from '../transaction/transaction.module';
+import { WalletModule } from '../wallet/wallet.module';
 
 @Module({
-  imports: [DrizzleModule],
+  imports: [
+    DrizzleModule,
+    forwardRef(() => WalletModule),
+    forwardRef(() => TransactionModule),
+  ],
   controllers: [EventController],
-  providers: [EventService, WalletService, TransactionService],
-  exports: [EventService, WalletService, TransactionService],
+  providers: [EventService],
+  exports: [EventService],
 })
 export class EventModule {}

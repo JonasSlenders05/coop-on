@@ -12,6 +12,7 @@ import {
 import { and, eq } from 'drizzle-orm';
 import { events } from '../drizzle/schema';
 import { plainToInstance } from 'class-transformer';
+import { PrivateRole } from '../auth/roles';
 
 @Injectable()
 export class EventService {
@@ -54,7 +55,7 @@ export class EventService {
     organiserId: number,
     roles: string[],
   ): Promise<EventResponseDto> {
-    const isAdmin = roles.includes('admin');
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
 
     const event = await this.db.query.events.findFirst({
       where: and(
@@ -93,7 +94,7 @@ export class EventService {
     organiserId: number,
     roles: string[],
   ): Promise<EventResponseDto> {
-    const isAdmin = roles.includes('admin');
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
     const [result] = await this.db
       .update(events)
       .set(changes)
@@ -115,7 +116,7 @@ export class EventService {
     organiserId: number,
     roles: string[],
   ): Promise<void> {
-    const isAdmin = roles.includes('admin');
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
 
     const whereClause = isAdmin
       ? eq(events.id, id)
@@ -133,7 +134,7 @@ export class EventService {
     organiserId: number,
     roles: string[],
   ): Promise<EventResponseDto[]> {
-    const isAdmin = roles.includes('admin');
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
 
     const eventsOfOrganiser = await this.db.query.events.findMany({
       where: isAdmin

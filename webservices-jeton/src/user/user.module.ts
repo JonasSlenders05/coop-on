@@ -3,12 +3,12 @@ import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { DrizzleModule } from '../drizzle/drizzle.module';
 import { AuthModule } from '../auth/auth.module';
-import { WalletService } from '../wallet/wallet.service';
+import { WalletModule } from '../wallet/wallet.module';
 
 @Module({
-  imports: [DrizzleModule, AuthModule],
+  imports: [DrizzleModule, AuthModule, WalletModule],
   controllers: [UserController],
-  providers: [UserService, WalletService],
-  exports: [UserService, WalletService],
+  providers: [UserService],
+  exports: [UserService],
 })
 export class UserModule {}

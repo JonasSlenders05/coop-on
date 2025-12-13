@@ -2,9 +2,11 @@ import {
   Body,
   Controller,
   Delete,
+  forwardRef,
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   ParseIntPipe,
   Post,
@@ -38,7 +40,10 @@ import { TransactionResponseDto } from '../transaction/transaction.dto';
 export class EventController {
   constructor(
     private readonly eventService: EventService,
+    @Inject(forwardRef(() => WalletService))
     private readonly walletService: WalletService,
+
+    @Inject(forwardRef(() => TransactionService))
     private readonly transactionService: TransactionService,
   ) {}
 

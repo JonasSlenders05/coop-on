@@ -1,5 +1,6 @@
 import {
-  ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -13,25 +14,24 @@ import {
   TransactionResponseDto,
   UpdateTransactionRequestDto,
 } from './transaction.dto';
-import {
-  events,
-  transactions,
-  users,
-  vendors,
-  wallets,
-} from '../drizzle/schema';
-import { and, eq, or, SQL } from 'drizzle-orm';
-import { PrivateRole, PublicRole } from '../auth/roles';
+import { transactions } from '../drizzle/schema';
+import { and, eq } from 'drizzle-orm';
 import { plainToInstance } from 'class-transformer';
 import { WalletService } from '../wallet/wallet.service';
 import { EventService } from '../event/event.service';
+import { PrivateRole } from '../auth/roles';
+import { VendorService } from '../vendor/vendor.service';
 
 @Injectable()
 export class TransactionService {
   constructor(
     @InjectDrizzle() private readonly db: DatabaseProvider,
+    @Inject(forwardRef(() => WalletService))
     private readonly walletService: WalletService,
+    @Inject(forwardRef(() => EventService))
     private readonly eventService: EventService,
+    @Inject(forwardRef(() => VendorService))
+    private readonly vendorService: VendorService,
   ) {}
 
   async getAll(): Promise<TransactionListResponseDto> {
@@ -39,8 +39,9 @@ export class TransactionService {
       with: {
         wallet: true,
         vendor: {
-          with: {
-            user: true,
+          columns: {
+            boothName: true,
+            userId: true,
           },
         },
       },
@@ -56,85 +57,47 @@ export class TransactionService {
   }
 
   async getById(
-    id: number,
+    transactionId: number,
     userId: number,
-    publicRoles: string[] = [],
-    privateRoles: string[] = [],
+    roles: string[],
   ): Promise<TransactionResponseDto> {
-    const isAdmin = privateRoles.includes(PrivateRole.ADMIN);
-    const isVendor = publicRoles.includes(PublicRole.VENDOR);
-    const isCustomer = publicRoles.includes(PublicRole.CUSTOMER);
-    const isOrganiser = publicRoles.includes(PublicRole.ORGANISER);
+    await this.walletService.getWalletsByUserId(userId, userId, roles); //controleert of de transactions uit 1 van de user zijn wallets komt
 
-    const conditions: SQL<unknown>[] = [eq(transactions.id, id)];
+    const transaction = await this.db.query.transactions.findFirst({
+      where: eq(transactions.id, transactionId),
+      with: {
+        wallet: true,
+        vendor: {
+          columns: {
+            boothName: true,
+            userId: true,
+          },
+        },
+      },
+    });
 
-    if (!isAdmin) {
-      const authConditions: SQL<unknown>[] = [];
-
-      if (isVendor) {
-        authConditions.push(eq(transactions.vendorId, userId));
-      }
-
-      if (isCustomer) {
-        authConditions.push(eq(wallets.userId, userId));
-      }
-
-      if (isOrganiser) {
-        authConditions.push(eq(events.organiserId, userId));
-      }
-
-      if (authConditions.length === 0) {
-        throw new ForbiddenException(
-          'You do not have permission to view transactions',
-        );
-      }
-
-      const authCondition = or(...authConditions);
-      if (authCondition) {
-        conditions.push(authCondition);
-      }
+    if (!transaction) {
+      throw new NotFoundException('No transaction with this id exists');
     }
 
-    const transaction = await this.db
-      .select({
-        id: transactions.id,
-        amount: transactions.amount,
-        date: transactions.date,
-        walletId: transactions.walletId,
-        vendorId: transactions.vendorId,
-        wallet: transactions.walletId,
-        vendor: transactions.vendorId,
-        eventId: transactions.eventId,
-      })
-      .from(transactions)
-      .leftJoin(wallets, eq(transactions.walletId, wallets.id))
-      .leftJoin(events, eq(wallets.eventId, events.id))
-      .leftJoin(vendors, eq(transactions.vendorId, vendors.userId))
-      .leftJoin(users, eq(wallets.userId, users.id))
-      .where(and(...conditions))
-      .limit(1);
-
-    if (!transaction || transaction.length === 0) {
-      throw new NotFoundException('Transaction not found or access denied');
-    }
-
-    return plainToInstance(TransactionResponseDto, transaction[0], {
+    return plainToInstance(TransactionResponseDto, transaction, {
       excludeExtraneousValues: true,
     });
   }
 
   async create(
     dto: CreateTransactionRequestDto,
-    userId: number,
-    publicRoles: string[],
-    privateRoles: string[],
+    currentUserId: number,
+    roles: string[],
   ): Promise<TransactionResponseDto> {
-    const roles = [...publicRoles, ...privateRoles];
     const wallet = await this.walletService.getById(
-      userId,
+      currentUserId,
       dto.walletId,
       roles,
     );
+
+    await this.vendorService.getById(dto.vendorId); //controleert of vendor id klopt
+
     const [newTransaction] = await this.db
       .insert(transactions)
       .values({
@@ -146,15 +109,14 @@ export class TransactionService {
       })
       .$returningId();
 
-    return this.getById(newTransaction.id, userId, publicRoles, privateRoles);
+    return this.getById(newTransaction.id, currentUserId, roles);
   }
 
   async updateById(
     id: number,
     changes: UpdateTransactionRequestDto,
     userId: number,
-    publicRoles: string[],
-    privateRoles: string[],
+    roles: string[],
   ): Promise<TransactionResponseDto> {
     const [result] = await this.db
       .update(transactions)
@@ -165,7 +127,7 @@ export class TransactionService {
       throw new NotFoundException('No transaction with this id exists');
     }
 
-    return this.getById(id, userId, publicRoles, privateRoles);
+    return this.getById(id, userId, roles);
   }
 
   async deleteById(id: number): Promise<void> {
@@ -189,8 +151,9 @@ export class TransactionService {
       with: {
         wallet: true,
         vendor: {
-          with: {
-            user: true,
+          columns: {
+            boothName: true,
+            userId: true,
           },
         },
       },
@@ -204,15 +167,23 @@ export class TransactionService {
   }
 
   async getTransactionsByVendorId(
+    currentUserId: number,
     vendorId: number,
+    roles: string[],
   ): Promise<TransactionResponseDto[]> {
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
+
     const walletTransactions = await this.db.query.transactions.findMany({
-      where: eq(transactions.vendorId, vendorId),
+      where: and(
+        isAdmin ? undefined : eq(transactions.vendorId, currentUserId),
+        eq(transactions.vendorId, vendorId),
+      ),
       with: {
         wallet: true,
         vendor: {
-          with: {
-            user: true,
+          columns: {
+            boothName: true,
+            userId: true,
           },
         },
       },
@@ -237,8 +208,9 @@ export class TransactionService {
       with: {
         wallet: true,
         vendor: {
-          with: {
-            user: true,
+          columns: {
+            boothName: true,
+            userId: true,
           },
         },
       },

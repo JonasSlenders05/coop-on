@@ -11,6 +11,7 @@ import {
 import { organisers } from '../drizzle/schema';
 import { and, eq } from 'drizzle-orm';
 import { plainToInstance } from 'class-transformer';
+import { PrivateRole } from '../auth/roles';
 
 @Injectable()
 export class OrganiserService {
@@ -35,7 +36,7 @@ export class OrganiserService {
     organiserId: number,
     roles: string[],
   ): Promise<OrganiserResponseDto> {
-    const isAdmin = roles.includes('admin');
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
 
     const organiser = await this.db.query.organisers.findFirst({
       where: isAdmin
@@ -64,7 +65,7 @@ export class OrganiserService {
     changes: UpdateOrganiserRequestDto,
     roles: string[],
   ): Promise<OrganiserResponseDto> {
-    const isAdmin = roles.includes('admin');
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
 
     const [organiser] = await this.db
       .update(organisers)
@@ -79,7 +80,7 @@ export class OrganiserService {
   }
 
   async deleteById(userId: number, roles: string[]): Promise<void> {
-    const isAdmin = roles.includes('admin');
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
 
     const [result] = await this.db
       .delete(organisers)
