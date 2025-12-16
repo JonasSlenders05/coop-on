@@ -38,6 +38,10 @@ export class TransactionController {
     description: 'Get all transactions',
     type: TransactionListResponseDto,
   })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+  })
   @Get()
   @Roles(PrivateRole.ADMIN)
   async getAllTransactions(): Promise<TransactionListResponseDto> {
@@ -96,6 +100,10 @@ export class TransactionController {
     status: 404,
     description: 'Transaction not found',
   })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+  })
   @Put(':id')
   @Roles(PrivateRole.ADMIN)
   async updateTransaction(
@@ -119,6 +127,10 @@ export class TransactionController {
   @ApiResponse({
     status: 404,
     description: 'Transaction not found',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
   })
   @Delete(':id')
   @Roles(PrivateRole.ADMIN)

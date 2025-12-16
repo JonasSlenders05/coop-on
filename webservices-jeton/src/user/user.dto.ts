@@ -70,10 +70,15 @@ export class PublicUserResponseDto {
 }
 
 export class RegisterUserRequestDto {
-  @IsString({ name: 'firstname', minLength: 2, maxLength: 255 })
+  @IsString({ name: 'firstname', minLength: 2, maxLength: 255, example: 'Jan' })
   firstname: string;
 
-  @IsString({ name: 'lastname', minLength: 2, maxLength: 255 })
+  @IsString({
+    name: 'lastname',
+    minLength: 2,
+    maxLength: 255,
+    example: 'Klaassen',
+  })
   lastname: string;
 
   @IsString({ name: 'email', example: 'user@email.com' })
@@ -88,12 +93,20 @@ export class RegisterUserRequestDto {
 
   @ValidateIf((o) => o.publicRoles?.includes(PublicRole.VENDOR))
   @IsNotEmpty()
-  @IsString({ minLength: 2, maxLength: 255 })
+  @IsString({
+    name: 'boothName',
+    minLength: 2,
+    maxLength: 255,
+  })
   boothName?: string;
 
   @ValidateIf((o) => o.publicRoles?.includes(PublicRole.ORGANISER))
   @IsNotEmpty()
-  @IsString({ name: 'organisation', minLength: 8, maxLength: 128 })
+  @IsString({
+    name: 'organisation',
+    minLength: 8,
+    maxLength: 128,
+  })
   organisation?: string;
 
   @ApiProperty({ enum: PublicRole, isArray: true })
@@ -102,27 +115,54 @@ export class RegisterUserRequestDto {
 }
 
 export class UpdateUserRequestDto {
+  @ApiProperty({
+    description: 'User firstname',
+    required: false,
+    minLength: 2,
+    maxLength: 255,
+    example: 'Jan',
+  })
   @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(255)
   firstname?: string;
 
+  @ApiProperty({
+    description: 'User lastname',
+    required: false,
+    minLength: 2,
+    maxLength: 255,
+    example: 'Klaassen',
+  })
   @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(255)
   lastname?: string;
 
+  @ApiProperty({
+    description: 'User email address',
+    required: false,
+    example: 'user@email.com',
+    type: 'string',
+    format: 'email',
+  })
   @IsOptional()
   @IsEmail()
   email?: string;
 
+  @ApiProperty({
+    description: 'User phonenumber',
+    required: false,
+    example: '+32471802753',
+  })
   @IsOptional()
   @IsString()
   phonenumber?: string;
 }
 
 export class UserListResponseDto {
+  @ApiProperty({ type: () => [PublicUserResponseDto] })
   items: PublicUserResponseDto[];
 }

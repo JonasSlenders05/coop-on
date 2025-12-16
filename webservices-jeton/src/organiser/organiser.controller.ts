@@ -58,8 +58,8 @@ export class OrganiserController {
     description: 'Organiser not found',
   })
   @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - you need to be signed in',
+    status: 403,
+    description: 'Forbidden',
   })
   @ApiParam({
     name: 'id',
@@ -77,13 +77,28 @@ export class OrganiserController {
     return this.organiserService.getById(user.id, userId, roles);
   }
 
-  // @Delete(':id')
-  // @Roles(PrivateRole.ADMIN)
-  // @HttpCode(HttpStatus.NO_CONTENT)
-  // async deleteOrganiser(@Param('id', ParseIntPipe) id: number): Promise<void> {
-  //   return this.organiserService.deleteById(id);
-  // }
-
+  @ApiResponse({
+    status: 200,
+    description: 'Update organiser by ID',
+    type: OrganiserResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Organiser not found.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    example: 'me',
+  })
   @Put(':id')
   @Roles(PrivateRole.ADMIN, PublicRole.ORGANISER)
   async updateOrganisersById(
@@ -101,6 +116,24 @@ export class OrganiserController {
     );
   }
 
+  @ApiResponse({
+    status: 200,
+    type: EventResponseDto,
+    isArray: true,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Organiser not found.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    example: 'me',
+  })
   @Get('/:id/events')
   @Roles(PrivateRole.ADMIN, PublicRole.ORGANISER)
   async getEventsbyOrganiserId(

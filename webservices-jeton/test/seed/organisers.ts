@@ -11,6 +11,7 @@ export async function seedOrganisers(
     { userId: 5, organisation: 'Pop Events' },
     { userId: 6, organisation: 'EDM ligths' },
     { userId: 10, organisation: 'EventMaker' },
+    { userId: 1, organisation: 'Coop-on' },
   ]);
 }
 

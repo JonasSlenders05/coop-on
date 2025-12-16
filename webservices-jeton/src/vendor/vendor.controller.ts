@@ -54,7 +54,7 @@ export class VendorController {
 
   @ApiResponse({
     status: 200,
-    description: 'Update vendor by ID',
+    description: 'Get vendor by ID',
     type: PublicVendorResponseDto,
   })
   @ApiResponse({
@@ -76,12 +76,20 @@ export class VendorController {
 
   @ApiResponse({
     status: 200,
-    description: 'Get vendor by ID',
+    description: 'Update vendor by ID',
     type: PublicVendorResponseDto,
   })
   @ApiResponse({
     status: 404,
-    description: 'Vendor not found',
+    description: 'Vendor not found.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
   })
   @ApiParam({
     name: 'id',
@@ -105,6 +113,24 @@ export class VendorController {
     );
   }
 
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully retrieved list of transactions.',
+    type: TransactionResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Vendor not found.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    example: 'me',
+  })
   @Get('/:id/transactions')
   @Roles(PrivateRole.ADMIN, PublicRole.VENDOR)
   async getTransactionsbyVendorId(

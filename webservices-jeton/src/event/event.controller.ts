@@ -22,7 +22,6 @@ import {
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { PrivateRole, PublicRole } from '../auth/roles';
-import { PublicUserResponseDto } from '../user/user.dto';
 import { type Session } from '../types/auth';
 import { CurrentUser } from '../auth/decorators/currentUser.decorator';
 import { PublicWalletResponseDto } from '../wallet/wallet.dto';
@@ -51,10 +50,6 @@ export class EventController {
     status: 200,
     description: 'Get all events',
     type: EventListResponseDto,
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - you need to be signed in',
   })
   @ApiResponse({
     status: 403,
@@ -92,6 +87,10 @@ export class EventController {
     status: 400,
     description: 'Invalid input data',
   })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+  })
   @Roles(PrivateRole.ADMIN, PublicRole.ORGANISER)
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -105,7 +104,7 @@ export class EventController {
   @ApiResponse({
     status: 200,
     description: 'Update event by ID',
-    type: PublicUserResponseDto,
+    type: EventResponseDto,
   })
   @ApiResponse({
     status: 404,
@@ -114,10 +113,6 @@ export class EventController {
   @ApiResponse({
     status: 400,
     description: 'Invalid input data',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - you need to be signed in',
   })
   @ApiResponse({
     status: 403,
@@ -147,6 +142,10 @@ export class EventController {
   @ApiResponse({
     status: 404,
     description: 'Event not found',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'You do not have access to this resource',
   })
   @Roles(PrivateRole.ADMIN, PublicRole.ORGANISER)
   @Delete(':id')
