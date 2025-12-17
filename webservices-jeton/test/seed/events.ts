@@ -1,4 +1,3 @@
-// /test/seeds/places.ts
 import { DatabaseProvider } from '../../src/drizzle/drizzle.provider';
 import { events } from '../../src/drizzle/schema';
 
@@ -10,6 +9,10 @@ export const EVENTS_SEED = [
     startDate: new Date('2025-08-15'),
     endDate: new Date('2025-08-17'),
     organiserId: 5,
+    organiser: {
+      organisation: 'Pop Events',
+      userId: 5,
+    },
   },
   {
     id: 2,
@@ -18,6 +21,22 @@ export const EVENTS_SEED = [
     startDate: new Date('2025-07-03'),
     endDate: new Date('2025-07-06'),
     organiserId: 10,
+    organiser: {
+      organisation: 'EventMaker',
+      userId: 10,
+    },
+  },
+  {
+    id: 3,
+    name: 'Tomorrow Land',
+    location: 'Boom',
+    startDate: new Date('2025-08-03'),
+    endDate: new Date('2025-08-06'),
+    organiserId: 6,
+    organiser: {
+      userId: 6,
+      organisation: 'EDM ligths',
+    },
   },
 ];
 

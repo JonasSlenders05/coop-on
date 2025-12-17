@@ -6,15 +6,18 @@ import {
   DatabaseProvider,
   DrizzleAsyncProvider,
 } from '../src/drizzle/drizzle.provider';
-import { clearEvents, EVENTS_SEED, seedEvents } from './seed/event';
+import { clearEvents, EVENTS_SEED, seedEvents } from './seed/events';
 import { clearUsers, seedUsers } from './seed/users';
 import { loginAdmin, loginCustomer, loginOrganiser } from './helpers/login';
 import testAuthHeader from './helpers/testAuthHeader';
-import { clearOrganisers, seedOrganisers } from './seed/organisers';
 import {
-  CreateEventRequestDto,
-  UpdateEventRequestDto,
-} from '../src/event/event.dto';
+  clearOrganisers,
+  ORGANISER_SEED,
+  seedOrganisers,
+} from './seed/organisers';
+import { clearWallets, seedWallets } from './seed/wallets';
+import { clearTransactions, seedTransactions } from './seed/transactions';
+import { clearVendors, seedVendors } from './seed/vendors';
 
 describe('Events', () => {
   let app: INestApplication<App>;
@@ -23,7 +26,6 @@ describe('Events', () => {
   let adminAuthToken: string;
   let organiserAuthToken: string;
   let customerAuthToken: string;
-  let eventID: number;
 
   const url = '/api/events';
 
@@ -33,185 +35,486 @@ describe('Events', () => {
 
     await seedUsers(app, drizzle);
     await seedOrganisers(app, drizzle);
+    await seedVendors(app, drizzle);
     await seedEvents(drizzle);
+    await seedWallets(drizzle);
+    await seedTransactions(drizzle);
 
     organiserAuthToken = await loginOrganiser(app);
     adminAuthToken = await loginAdmin(app);
     customerAuthToken = await loginCustomer(app);
-
-    eventID = EVENTS_SEED[0].id;
   });
 
   afterAll(async () => {
+    await clearTransactions(drizzle);
+    await clearWallets(drizzle);
     await clearEvents(drizzle);
+    await clearVendors(drizzle);
     await clearOrganisers(drizzle);
     await clearUsers(drizzle);
     await app.close();
   });
 
+  //getAll
   describe('GET /api/events', () => {
+    //NON-ORGANISER
     it('should return 403 for non-organiser user', async () => {
-      await request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
         .get(url)
-        .auth(customerAuthToken, { type: 'bearer' })
-        .expect(403);
+        .auth(customerAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(403);
+      expect(response.body.message).toBe(
+        'You do not have access to this resource',
+      );
     });
 
+    //ORGANISER
     it('should return 403 for organiser user', async () => {
-      await request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
         .get(url)
-        .auth(organiserAuthToken, { type: 'bearer' })
-        .expect(403);
+        .auth(organiserAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(403);
+      expect(response.body.message).toBe(
+        'You do not have access to this resource',
+      );
     });
 
+    //ADMIN
     it('should 200 and return all events', async () => {
       const response = await request(app.getHttpServer())
         .get(url)
         .auth(adminAuthToken, { type: 'bearer' });
+
       expect(response.statusCode).toBe(200);
-      expect(response.body.items).toEqual(expect.arrayContaining(EVENTS_SEED));
+
+      const expectedItems = JSON.parse(JSON.stringify(EVENTS_SEED));
+
+      expect(response.body.items).toEqual(
+        expect.arrayContaining(expectedItems),
+      );
     });
     testAuthHeader(() => request(app.getHttpServer()).get(url));
   });
 
+  //getByID
   describe('GET /api/events/:id', () => {
+    //ALL USERS
     it('should 200 and return event', async () => {
       const response = await request(app.getHttpServer())
-        .get(`${url}/${eventID}`)
+        .get(`${url}/1`)
         .auth(customerAuthToken, { type: 'bearer' });
       expect(response.statusCode).toBe(200);
-      expect(response.body.id).toBe(eventID);
+      expect(response.body.id).toBe(EVENTS_SEED[0].id);
     });
 
+    //ID bestaat niet
     it('should 404 when event does not exist', async () => {
-      await request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
         .get(`${url}/999999`)
-        .auth(customerAuthToken, { type: 'bearer' })
-        .expect(404);
+        .auth(customerAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(404);
+      expect(response.body.message).toBe('No event with this id exists');
     });
-    testAuthHeader(() => request(app.getHttpServer()).get(`${url}/${eventID}`));
+
+    it('should 400 with invalid event id', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`${url}/invalid`)
+        .auth(customerAuthToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toBe(
+        'Validation failed (numeric string is expected)',
+      );
+    });
+
+    testAuthHeader(() => request(app.getHttpServer()).get(`${url}/1`));
   });
 
   describe('POST /api/events', () => {
-    const newEvent: CreateEventRequestDto = {
-      name: 'New Festival',
-      location: 'Ghent',
-      startDate: new Date(),
-      endDate: new Date(),
-    };
-
-    it('should return 403 for customer', async () => {
-      await request(app.getHttpServer())
-        .post(url)
-        .send(newEvent)
-        .auth(customerAuthToken, { type: 'bearer' })
-        .expect(403);
-    });
-
-    it('should 201 and create event for organiser', async () => {
+    //NON-ORGANISER
+    it('should return 403 for non-organiser', async () => {
       const response = await request(app.getHttpServer())
         .post(url)
-        .send(newEvent)
-        .auth(organiserAuthToken, { type: 'bearer' });
-      expect(response.statusCode).toBe(201);
-      expect(response.body.name).toBe(newEvent.name);
+        .send({
+          name: 'New Festival',
+          location: 'Ghent',
+          startDate: new Date(),
+          endDate: new Date(),
+        })
+        .auth(customerAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(403);
+      expect(response.body.message).toBe(
+        'You do not have access to this resource',
+      );
     });
 
-    it('should return 400 for invalid data', async () => {
-      await request(app.getHttpServer())
+    //ORGANISER
+    it('should 200 and return the created event for organiser', async () => {
+      const response = await request(app.getHttpServer())
         .post(url)
-        .send({ ...newEvent, name: '' })
-        .auth(organiserAuthToken, { type: 'bearer' })
-        .expect(400);
+        .send({
+          name: 'New Festival',
+          location: 'Ghent',
+          startDate: new Date(),
+          endDate: new Date(),
+        })
+        .auth(organiserAuthToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(201);
+
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          id: expect.any(Number),
+          organiserId: ORGANISER_SEED[1].userId,
+          name: 'New Festival',
+          location: 'Ghent',
+          startDate: '2025-12-17T00:00:00.000Z',
+          endDate: '2025-12-17T00:00:00.000Z',
+        }),
+      );
     });
+
+    //MISSING NAME
+    it('should return 400 when missing name', async () => {
+      const response = await request(app.getHttpServer())
+        .post(url)
+        .send({
+          location: 'Ghent',
+          startDate: new Date(),
+          endDate: new Date(),
+        })
+        .auth(organiserAuthToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.details.body).toHaveProperty('name');
+    });
+
+    //MISSING LOCATION
+    it('should return 400 when missing location', async () => {
+      const response = await request(app.getHttpServer())
+        .post(url)
+        .send({
+          name: 'Event',
+          startDate: new Date(),
+          endDate: new Date(),
+        })
+        .auth(organiserAuthToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.details.body).toHaveProperty('location');
+    });
+
+    //MISSING STARTDATE
+    it('should return 400 when missing startdate', async () => {
+      const response = await request(app.getHttpServer())
+        .post(url)
+        .send({
+          name: 'Event',
+          location: 'Gent',
+          endDate: new Date(),
+        })
+        .auth(organiserAuthToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.details.body).toHaveProperty('startDate');
+    });
+
+    //MISSING ENDDATE
+    it('should return 400 when missing enddate', async () => {
+      const response = await request(app.getHttpServer())
+        .post(url)
+        .send({
+          name: 'Event',
+          location: 'Gent',
+          startDate: new Date(),
+        })
+        .auth(organiserAuthToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.details.body).toHaveProperty('endDate');
+    });
+
+    //EXCISTING EVENT
+    it('should 409 for duplicate event name', async () => {
+      const response = await request(app.getHttpServer())
+        .post(url)
+        .send({
+          name: 'Pukkelpop',
+          location: 'Ghent',
+          startDate: new Date(),
+          endDate: new Date(),
+        })
+        .auth(organiserAuthToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(409);
+      expect(response.body).toMatchObject({
+        message: 'This item already exists',
+      });
+    });
+
     testAuthHeader(() => request(app.getHttpServer()).post(url));
   });
 
-  describe('PUT /api/events/:id', () => {
-    const updateData: UpdateEventRequestDto = {
-      name: 'Updated Festival Name',
-    };
-
-    it('should return 403 for customer', async () => {
-      await request(app.getHttpServer())
-        .put(`${url}/${eventID}`)
-        .send(updateData)
-        .auth(customerAuthToken, { type: 'bearer' })
-        .expect(403);
-    });
-
-    it('should 200 and update event for organiser', async () => {
-      const response = await request(app.getHttpServer())
-        .put(`${url}/${eventID}`)
-        .send(updateData)
-        .auth(organiserAuthToken, { type: 'bearer' });
-      expect(response.statusCode).toBe(200);
-      expect(response.body.name).toBe(updateData.name);
-    });
-    testAuthHeader(() => request(app.getHttpServer()).put(`${url}/${eventID}`));
-  });
-
+  //getWalletsByEventID
   describe('GET /api/events/:id/wallets', () => {
-    it('should return 403 for customer', async () => {
-      await request(app.getHttpServer())
-        .get(`${url}/${eventID}/wallets`)
-        .auth(customerAuthToken, { type: 'bearer' })
-        .expect(403);
+    //NON-ORGANISERS
+    it('should return 403 for non-organisers', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`${url}/1/wallets`)
+        .auth(customerAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(403);
+      expect(response.body.message).toEqual(
+        'You do not have access to this resource',
+      );
     });
 
+    //EVENT OWNED BY ORGANISER
     it('should 200 and return wallets for organiser', async () => {
       const response = await request(app.getHttpServer())
-        .get(`${url}/${eventID}/wallets`)
+        .get(`${url}/3/wallets`)
         .auth(organiserAuthToken, { type: 'bearer' });
       expect(response.statusCode).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
-    });
-    testAuthHeader(() =>
-      request(app.getHttpServer()).get(`${url}/${eventID}/wallets`),
-    );
-  });
+      expect(response.body.length).toBe(2);
 
-  describe('GET /api/events/:id/transactions', () => {
-    it('should return 403 for customer', async () => {
-      await request(app.getHttpServer())
-        .get(`${url}/${eventID}/transactions`)
-        .auth(customerAuthToken, { type: 'bearer' })
-        .expect(403);
+      expect(response.body).toEqual(
+        expect.arrayContaining([
+          {
+            active: true,
+            createdAt: '2025-08-14T08:00:00.000Z',
+            event: { name: 'Tomorrow Land' },
+            eventId: 3,
+            id: 1,
+            user: { email: 'dimitri@tommorowland.be' },
+            userId: 6,
+            value: 50,
+          },
+          {
+            active: true,
+            createdAt: '2025-07-17T08:00:00.000Z',
+            event: { name: 'Tomorrow Land' },
+            eventId: 3,
+            id: 2,
+            user: { email: 'frank.dewever@gmail.com' },
+            userId: 5,
+            value: 100,
+          },
+        ]),
+      );
     });
 
-    it('should 200 and return transactions for organiser', async () => {
+    //EVENT NOT OWNED BY ORGANISER
+    it("should 404 for organisers who don't own the event", async () => {
       const response = await request(app.getHttpServer())
-        .get(`${url}/${eventID}/transactions`)
+        .get(`${url}/2/wallets`)
         .auth(organiserAuthToken, { type: 'bearer' });
-      expect(response.statusCode).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.statusCode).toBe(404);
+      expect(response.body.message).toEqual('No event with this id found');
     });
+
+    testAuthHeader(() => request(app.getHttpServer()).get(`${url}/3/wallets`));
+  });
+
+  //getTransactionsByEventId
+  describe('GET /api/events/:id/transactions', () => {
+    //NON-ORGANISER
+    it('should return 403 for non-organisers', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`${url}/3/transactions`)
+        .auth(customerAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(403);
+      expect(response.body.message).toBe(
+        'You do not have access to this resource',
+      );
+    });
+
+    //OWNER OF EVENT
+    it('should 200 and return transactions', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`${url}/3/transactions`)
+        .auth(adminAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(200);
+      expect(response.body.length).toBe(2);
+
+      expect(response.body).toEqual(
+        expect.arrayContaining([
+          {
+            amount: -8,
+            date: '2025-08-15T10:00:00.000Z',
+            eventId: 3,
+            id: 1,
+            vendor: { boothName: 'Mario Pizza', userId: 10 },
+            vendorId: 10,
+            walletId: 1,
+          },
+          {
+            amount: -12,
+            date: '2025-07-18T13:00:00.000Z',
+            eventId: 3,
+            id: 2,
+            vendor: { boothName: 'Mario Pizza', userId: 10 },
+            vendorId: 10,
+            walletId: 2,
+          },
+        ]),
+      );
+    });
+
+    //NON OWNER OF EVENT
+    it("should 404 for organisers who don't own the event", async () => {
+      const response = await request(app.getHttpServer())
+        .get(`${url}/2/transactions`)
+        .auth(organiserAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(404);
+      expect(response.body.message).toEqual('No event with this id found');
+    });
+
     testAuthHeader(() =>
-      request(app.getHttpServer()).get(`${url}/${eventID}/transactions`),
+      request(app.getHttpServer()).get(`${url}/3/transactions`),
     );
   });
 
-  describe('DELETE /api/events/:id', () => {
-    it('should return 403 for customer', async () => {
-      await request(app.getHttpServer())
-        .delete(`${url}/${eventID}`)
-        .auth(customerAuthToken, { type: 'bearer' })
-        .expect(403);
+  //updateById
+  describe('PUT /api/events/:id', () => {
+    //NON-ORGANISER
+    it('should return 403 for non-organiser', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`${url}/1`)
+        .send({ name: 'Updated Festival Name' })
+        .auth(customerAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(403);
+      expect(response.body.message).toEqual(
+        'You do not have access to this resource',
+      );
     });
 
-    it('should 204 and delete event for organiser', async () => {
-      await request(app.getHttpServer())
-        .delete(`${url}/${eventID}`)
-        .auth(organiserAuthToken, { type: 'bearer' })
-        .expect(204);
-
-      await request(app.getHttpServer())
-        .get(`${url}/${eventID}`)
-        .auth(adminAuthToken, { type: 'bearer' })
-        .expect(404);
+    //EVENT NOT OWNED BY ORGANISER
+    it('should 404 when the event is not owned by the organiser', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`${url}/2`)
+        .send({ name: 'Updated Name', location: 'Updated Location' })
+        .auth(organiserAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(404);
+      expect(response.body.message).toEqual('No event with this id found');
     });
+
+    //EVENT OWNED BY ORGANISER
+    it('should return 200 and update event for organising organiser', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`${url}/3`)
+        .send({ name: 'Updated Name', location: 'Updated Location' })
+        .auth(organiserAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          id: 3,
+          name: 'Updated Name',
+          location: 'Updated Location',
+          startDate: '2025-08-03T00:00:00.000Z',
+          endDate: '2025-08-06T00:00:00.000Z',
+          organiserId: 6,
+          organiser: {
+            userId: 6,
+            organisation: 'EDM ligths',
+          },
+        }),
+      );
+    });
+
+    //ADMIN
+    it('should return 200 and update event', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`${url}/3`)
+        .send({
+          startDate: '2025-08-18T00:00:00.000Z',
+          endDate: '2025-08-20T00:00:00.000Z',
+        })
+        .auth(adminAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          id: 3,
+          name: 'Updated Name',
+          location: 'Updated Location',
+          startDate: '2025-08-18T00:00:00.000Z',
+          endDate: '2025-08-20T00:00:00.000Z',
+          organiserId: 6,
+          organiser: {
+            userId: 6,
+            organisation: 'EDM ligths',
+          },
+        }),
+      );
+    });
+
+    //EMPTY CONTENT
+    it('should 400 for empty update content', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`${url}/3`)
+        .send({ name: '' })
+        .auth(adminAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(400);
+      expect(response.body.details.body).toHaveProperty('name');
+    });
+
+    //DUPLICATE NAMES
+    it('should 409 for duplicate event name', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`${url}/3`)
+        .send({ name: 'Pukkelpop' })
+        .auth(adminAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(409);
+      expect(response.body.message).toEqual('This item already exists');
+    });
+
     testAuthHeader(() =>
-      request(app.getHttpServer()).delete(`${url}/${eventID}`),
+      request(app.getHttpServer()).put(`${url}/3`).send({
+        name: 'Updated Name',
+        location: 'Updated Location',
+        startDate: '2025-08-18T00:00:00.000Z',
+        endDate: '2025-08-20T00:00:00.000Z',
+      }),
     );
+  });
+
+  //deleteEventById
+  describe('DELETE /api/events/:id', () => {
+    //NON-ORGANISER
+    it('should return 403 for customer', async () => {
+      const response = await request(app.getHttpServer())
+        .delete(`${url}/1`)
+        .auth(customerAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(403);
+      expect(response.body.message).toEqual(
+        'You do not have access to this resource',
+      );
+    });
+
+    //NON-OWNER
+    it('should return 404 for organisers who do not own the event', async () => {
+      const response = await request(app.getHttpServer())
+        .delete(`${url}/1`)
+        .auth(organiserAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(404);
+      expect(response.body.message).toEqual('No event with this id found');
+    });
+
+    //OWNER OF EVENT
+    it('should 204 and return nothing', async () => {
+      const response = await request(app.getHttpServer())
+        .delete(`${url}/3`)
+        .auth(organiserAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(204);
+      expect(response.body).toEqual({});
+    });
+
+    //ADMIN
+    it('should 204 and return nothing', async () => {
+      const response = await request(app.getHttpServer())
+        .delete(`${url}/2`)
+        .auth(adminAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(204);
+      expect(response.body).toEqual({});
+    });
+    testAuthHeader(() => request(app.getHttpServer()).delete(`${url}/3`));
   });
 });

@@ -1,4 +1,3 @@
-// test/seeds/users.ts
 import { INestApplication } from '@nestjs/common';
 import { AuthService } from '../../src/auth/auth.service';
 import { DatabaseProvider } from '../../src/drizzle/drizzle.provider';
