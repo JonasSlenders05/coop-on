@@ -60,7 +60,7 @@ describe('Users', () => {
         .set('Authorization', `Bearer ${adminAuthToken}`);
 
       expect(response.statusCode).toBe(200);
-      expect(response.body.items.length).toBe(4);
+      expect(response.body.items.length).toBe(5);
 
       expect(response.body.items).toEqual(
         expect.arrayContaining([
@@ -99,6 +99,14 @@ describe('Users', () => {
               PublicRole.ORGANISER,
               PublicRole.VENDOR,
             ],
+          },
+          {
+            id: 11,
+            firstname: 'Luigi',
+            lastname: 'Kebab',
+            email: 'Luigi@kebab.be',
+            phonenumber: '+32484750987',
+            publicRoles: [PublicRole.VENDOR],
           },
         ]),
       );

@@ -26,6 +26,14 @@ export const TRANSACTION_SEED = [
     vendorId: 10,
     eventId: 2,
   },
+  {
+    id: 4,
+    date: new Date('2025-08-15T10:00:00.000Z'),
+    amount: -8,
+    walletId: 1,
+    vendorId: 11,
+    eventId: 1,
+  },
 ];
 
 export async function seedTransactions(drizzle: DatabaseProvider) {

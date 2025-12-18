@@ -56,6 +56,16 @@ export async function seedUsers(
       ],
       privateRoles: [PrivateRole.USER, PrivateRole.ADMIN],
     },
+    {
+      id: 11,
+      firstname: 'Luigi',
+      lastname: 'Kebab',
+      email: 'Luigi@kebab.be',
+      phonenumber: '+32484750987',
+      passwordHash,
+      publicRoles: [PublicRole.VENDOR],
+      privateRoles: [PrivateRole.USER],
+    },
   ]);
 }
 

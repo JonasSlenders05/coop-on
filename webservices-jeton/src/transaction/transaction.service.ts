@@ -15,11 +15,11 @@ import {
   UpdateTransactionRequestDto,
 } from './transaction.dto';
 import { transactions } from '../drizzle/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray, or } from 'drizzle-orm';
 import { plainToInstance } from 'class-transformer';
 import { WalletService } from '../wallet/wallet.service';
 import { EventService } from '../event/event.service';
-import { PrivateRole } from '../auth/roles';
+import { PrivateRole, PublicRole } from '../auth/roles';
 import { VendorService } from '../vendor/vendor.service';
 
 @Injectable()
@@ -61,10 +61,27 @@ export class TransactionService {
     userId: number,
     roles: string[],
   ): Promise<TransactionResponseDto> {
-    await this.walletService.getWalletsByUserId(userId, userId, roles); //controleert of de transactions uit 1 van de user zijn wallets komt
+    const isAdmin = roles.includes(PrivateRole.ADMIN);
+    const isVendor = roles.includes(PublicRole.VENDOR);
+
+    const wallets = await this.walletService.getWalletsByUserId(
+      userId,
+      userId,
+      roles,
+    );
+    const walletIds = wallets.map((w) => w.id);
 
     const transaction = await this.db.query.transactions.findFirst({
-      where: eq(transactions.id, transactionId),
+      where: and(
+        eq(transactions.id, transactionId),
+
+        isAdmin
+          ? undefined
+          : or(
+              inArray(transactions.walletId, walletIds),
+              isVendor ? eq(transactions.vendorId, userId) : undefined,
+            ),
+      ),
       with: {
         wallet: true,
         vendor: {
@@ -77,7 +94,7 @@ export class TransactionService {
     });
 
     if (!transaction) {
-      throw new NotFoundException('No transaction with this id exists');
+      throw new NotFoundException('No transaction with this id found');
     }
 
     return plainToInstance(TransactionResponseDto, transaction, {

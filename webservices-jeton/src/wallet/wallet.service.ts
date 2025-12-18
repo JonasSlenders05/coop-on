@@ -129,9 +129,10 @@ export class WalletService {
       .delete(wallets)
       .where(
         isAdmin
-          ? eq(wallets.id, currentUserId)
-          : and(eq(wallets.id, walletId), eq(wallets, currentUserId)),
+          ? eq(wallets.id, walletId)
+          : and(eq(wallets.id, walletId), eq(wallets.userId, currentUserId)),
       );
+
     if (result.affectedRows === 0) {
       throw new NotFoundException('No wallet with this id found');
     }
