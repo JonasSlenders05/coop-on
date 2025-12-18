@@ -1,6 +1,4 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './config/configuration';
 import { DrizzleModule } from './drizzle/drizzle.module';
@@ -34,7 +32,7 @@ import { RolesGuard } from './auth/guards/roles.guard';
     SessionModule,
     OrganiserModule,
   ],
-  controllers: [AppController, HealthController],
+  controllers: [HealthController],
   providers: [
     {
       provide: APP_GUARD,
@@ -44,7 +42,6 @@ import { RolesGuard } from './auth/guards/roles.guard';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
-    AppService,
   ],
 })
 export class AppModule implements NestModule {
