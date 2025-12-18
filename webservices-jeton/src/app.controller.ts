@@ -7,6 +7,6 @@ export class AppController {
 
   @Get()
   getHello(): string {
-    return this.appService.getHello();
+    return 'Coop-on API is running! 🚀 Ga naar /api/docs voor documentatie.';
   }
 }
