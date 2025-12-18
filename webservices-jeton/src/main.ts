@@ -18,7 +18,7 @@ async function bootstrap() {
     logger: process.env.LOG_DISABLED === 'true' ? false : undefined,
   });
 
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('/api');
   app.use(helmet());
 
   app.useGlobalPipes(
