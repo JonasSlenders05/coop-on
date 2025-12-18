@@ -18,9 +18,7 @@ async function bootstrap() {
     logger: process.env.LOG_DISABLED === 'true' ? false : undefined,
   });
 
-  app.setGlobalPrefix('api', {
-    exclude: ['/'], // <--- DIT IS DE BELANGRIJKE REGEL
-  });
+  app.setGlobalPrefix('api');
   app.use(helmet());
 
   app.useGlobalPipes(
