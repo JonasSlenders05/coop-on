@@ -203,7 +203,7 @@ export class TransactionService {
     eventId: number,
     roles: string[],
   ): Promise<TransactionResponseDto[]> {
-    await this.eventService.verifyAcces(eventId, currentUserId, roles);
+    await this.eventService.verifyAccess(eventId, currentUserId, roles);
 
     const eventTransactions = await this.db.query.transactions.findMany({
       where: eq(transactions.eventId, eventId),

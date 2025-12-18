@@ -19,20 +19,26 @@ export class DrizzleQueryErrorFilter implements ExceptionFilter {
     // 👇 3
     switch (code) {
       case 'ER_DUP_ENTRY':
-        if (message.includes('idx_place_name_unique')) {
-          throw new ConflictException('A place with this name already exists');
-        } else if (message.includes('idx_user_email_unique')) {
+        if (message.includes('uniq_event_name')) {
+          throw new ConflictException('An event with this name already exists');
+        } else if (message.includes('uniq_user_email')) {
           throw new ConflictException(
             'There is already a user with this email address',
+          );
+        } else if (message.includes('uniq_wallet_per_customer_event')) {
+          throw new ConflictException(
+            'This user already has a wallet for this event',
           );
         } else {
           throw new ConflictException('This item already exists');
         }
       case 'ER_NO_REFERENCED_ROW_2':
-        if (message.includes('transactions_user_id')) {
-          throw new NotFoundException('No user with this id exists');
-        } else if (message.includes('transactions_place_id')) {
-          throw new NotFoundException('No place with this id exists');
+        if (message.includes('transactions_vendorId')) {
+          throw new NotFoundException('No vendor with this id exists');
+        } else if (message.includes('transactions_eventId')) {
+          throw new NotFoundException('No event with this id exists');
+        } else if (message.includes('transactions_walletId')) {
+          throw new NotFoundException('No wallet with this id exists');
         }
         break;
     }

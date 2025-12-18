@@ -76,7 +76,7 @@ export class AuthService {
 
     if (!userEmail) {
       throw new UnauthorizedException(
-        'The given email and password does not match',
+        'The given email and password do not match',
       );
     }
 
@@ -87,7 +87,7 @@ export class AuthService {
 
     if (!passwordValid)
       throw new UnauthorizedException(
-        'The given email and password does not match',
+        'The given email and password do not match',
       );
 
     return this.signJwt(userEmail);

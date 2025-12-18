@@ -3,9 +3,7 @@ import { DatabaseProvider } from '../../src/drizzle/drizzle.provider';
 import { organisers } from '../../src/drizzle/schema';
 
 export const ORGANISER_SEED = [
-  { userId: 5, organisation: 'Pop Events' },
-  { userId: 6, organisation: 'EDM ligths' },
-  { userId: 10, organisation: 'EventMaker' },
+  { userId: 6, organisation: 'EDM lights' },
   { userId: 1, organisation: 'Coop-on' },
 ];
 

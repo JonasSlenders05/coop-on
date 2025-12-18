@@ -8,7 +8,7 @@ export const TRANSACTION_SEED = [
     amount: -8,
     walletId: 1,
     vendorId: 10,
-    eventId: 3,
+    eventId: 2,
   },
   {
     id: 2,
@@ -16,7 +16,15 @@ export const TRANSACTION_SEED = [
     amount: -12,
     walletId: 2,
     vendorId: 10,
-    eventId: 3,
+    eventId: 2,
+  },
+  {
+    id: 3,
+    date: new Date('2025-08-15T10:00:00.000Z'),
+    amount: -8,
+    walletId: 1,
+    vendorId: 10,
+    eventId: 2,
   },
 ];
 

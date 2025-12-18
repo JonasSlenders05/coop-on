@@ -18,6 +18,14 @@ export const WALLET_SEED = [
     userId: 5,
     eventId: 3,
   },
+  {
+    id: 3,
+    value: 50,
+    active: true,
+    createdAt: new Date('2025-08-14T10:00:00'),
+    userId: 5,
+    eventId: 2,
+  },
 ];
 
 export async function seedWallets(drizzle: DatabaseProvider) {

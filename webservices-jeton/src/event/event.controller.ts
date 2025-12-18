@@ -170,7 +170,7 @@ export class EventController {
     @CurrentUser() user: Session,
   ): Promise<PublicWalletResponseDto[]> {
     const roles = [...user.privateRoles, ...user.publicRoles];
-    await this.eventService.verifyAcces(user.id, eventId, roles);
+    await this.eventService.verifyAccess(user.id, eventId, roles);
     return await this.walletService.getWalletsByEventId(eventId);
   }
 

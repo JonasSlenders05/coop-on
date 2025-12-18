@@ -71,7 +71,7 @@ export class EventService {
     organiserId: number,
     roles: string[],
   ): Promise<EventResponseDto> {
-    await this.verifyAcces(organiserId, eventId, roles);
+    await this.verifyAccess(organiserId, eventId, roles);
 
     const isAdmin = roles.includes(PrivateRole.ADMIN);
     const [result] = await this.db
@@ -95,7 +95,7 @@ export class EventService {
     eventId: number,
     roles: string[],
   ): Promise<void> {
-    await this.verifyAcces(currentUserId, eventId, roles);
+    await this.verifyAccess(currentUserId, eventId, roles);
 
     const isAdmin = roles.includes(PrivateRole.ADMIN);
 
@@ -134,7 +134,7 @@ export class EventService {
     });
   }
 
-  async verifyAcces(
+  async verifyAccess(
     currentUserId: number,
     eventId: number,
     roles: string[],

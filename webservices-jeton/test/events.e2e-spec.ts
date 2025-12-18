@@ -6,15 +6,11 @@ import {
   DatabaseProvider,
   DrizzleAsyncProvider,
 } from '../src/drizzle/drizzle.provider';
-import { clearEvents, EVENTS_SEED, seedEvents } from './seed/events';
+import { clearEvents, seedEvents } from './seed/events';
 import { clearUsers, seedUsers } from './seed/users';
 import { loginAdmin, loginCustomer, loginOrganiser } from './helpers/login';
 import testAuthHeader from './helpers/testAuthHeader';
-import {
-  clearOrganisers,
-  ORGANISER_SEED,
-  seedOrganisers,
-} from './seed/organisers';
+import { clearOrganisers, seedOrganisers } from './seed/organisers';
 import { clearWallets, seedWallets } from './seed/wallets';
 import { clearTransactions, seedTransactions } from './seed/transactions';
 import { clearVendors, seedVendors } from './seed/vendors';
@@ -86,11 +82,38 @@ describe('Events', () => {
         .auth(adminAuthToken, { type: 'bearer' });
 
       expect(response.statusCode).toBe(200);
-
-      const expectedItems = JSON.parse(JSON.stringify(EVENTS_SEED));
+      expect(response.body.items.length).toBe(3);
 
       expect(response.body.items).toEqual(
-        expect.arrayContaining(expectedItems),
+        expect.arrayContaining([
+          {
+            endDate: '2025-08-17T00:00:00.000Z',
+            id: 1,
+            location: 'Kiewit',
+            name: 'Pukkelpop',
+            organiser: { organisation: 'EDM lights', userId: 6 },
+            organiserId: 6,
+            startDate: '2025-08-15T00:00:00.000Z',
+          },
+          {
+            endDate: '2025-07-06T00:00:00.000Z',
+            id: 2,
+            location: 'Werchter',
+            name: 'Rock Werchter',
+            organiser: { organisation: 'EDM lights', userId: 6 },
+            organiserId: 6,
+            startDate: '2025-07-03T00:00:00.000Z',
+          },
+          {
+            endDate: '2025-08-06T00:00:00.000Z',
+            id: 3,
+            location: 'Boom',
+            name: 'Tomorrow Land',
+            organiser: { organisation: 'Coop-on', userId: 1 },
+            organiserId: 1,
+            startDate: '2025-08-03T00:00:00.000Z',
+          },
+        ]),
       );
     });
     testAuthHeader(() => request(app.getHttpServer()).get(url));
@@ -104,7 +127,18 @@ describe('Events', () => {
         .get(`${url}/1`)
         .auth(customerAuthToken, { type: 'bearer' });
       expect(response.statusCode).toBe(200);
-      expect(response.body.id).toBe(EVENTS_SEED[0].id);
+      expect(response.body).toMatchObject({
+        id: 1,
+        name: 'Pukkelpop',
+        location: 'Kiewit',
+        startDate: '2025-08-15T00:00:00.000Z',
+        endDate: '2025-08-17T00:00:00.000Z',
+        organiserId: 6,
+        organiser: {
+          organisation: 'EDM lights',
+          userId: 6,
+        },
+      });
     });
 
     //ID bestaat niet
@@ -138,8 +172,8 @@ describe('Events', () => {
         .send({
           name: 'New Festival',
           location: 'Ghent',
-          startDate: new Date(),
-          endDate: new Date(),
+          startDate: new Date('2025-12-17'),
+          endDate: new Date('2025-12-17'),
         })
         .auth(customerAuthToken, { type: 'bearer' });
       expect(response.statusCode).toBe(403);
@@ -155,8 +189,8 @@ describe('Events', () => {
         .send({
           name: 'New Festival',
           location: 'Ghent',
-          startDate: new Date(),
-          endDate: new Date(),
+          startDate: new Date('2025-12-17'),
+          endDate: new Date('2025-12-17'),
         })
         .auth(organiserAuthToken, { type: 'bearer' });
 
@@ -165,7 +199,7 @@ describe('Events', () => {
       expect(response.body).toEqual(
         expect.objectContaining({
           id: expect.any(Number),
-          organiserId: ORGANISER_SEED[1].userId,
+          organiserId: 6,
           name: 'New Festival',
           location: 'Ghent',
           startDate: '2025-12-17T00:00:00.000Z',
@@ -180,8 +214,8 @@ describe('Events', () => {
         .post(url)
         .send({
           location: 'Ghent',
-          startDate: new Date(),
-          endDate: new Date(),
+          startDate: new Date('2025-12-17'),
+          endDate: new Date('2025-12-17'),
         })
         .auth(organiserAuthToken, { type: 'bearer' });
 
@@ -195,8 +229,8 @@ describe('Events', () => {
         .post(url)
         .send({
           name: 'Event',
-          startDate: new Date(),
-          endDate: new Date(),
+          startDate: new Date('2025-12-17'),
+          endDate: new Date('2025-12-17'),
         })
         .auth(organiserAuthToken, { type: 'bearer' });
 
@@ -211,7 +245,7 @@ describe('Events', () => {
         .send({
           name: 'Event',
           location: 'Gent',
-          endDate: new Date(),
+          endDate: new Date('2025-12-17'),
         })
         .auth(organiserAuthToken, { type: 'bearer' });
 
@@ -226,7 +260,7 @@ describe('Events', () => {
         .send({
           name: 'Event',
           location: 'Gent',
-          startDate: new Date(),
+          startDate: new Date('2025-12-17'),
         })
         .auth(organiserAuthToken, { type: 'bearer' });
 
@@ -241,14 +275,14 @@ describe('Events', () => {
         .send({
           name: 'Pukkelpop',
           location: 'Ghent',
-          startDate: new Date(),
-          endDate: new Date(),
+          startDate: new Date('2025-12-17'),
+          endDate: new Date('2025-12-17'),
         })
         .auth(organiserAuthToken, { type: 'bearer' });
 
       expect(response.statusCode).toBe(409);
       expect(response.body).toMatchObject({
-        message: 'This item already exists',
+        message: 'An event with this name already exists',
       });
     });
 
@@ -271,32 +305,22 @@ describe('Events', () => {
     //EVENT OWNED BY ORGANISER
     it('should 200 and return wallets for organiser', async () => {
       const response = await request(app.getHttpServer())
-        .get(`${url}/3/wallets`)
+        .get(`${url}/2/wallets`)
         .auth(organiserAuthToken, { type: 'bearer' });
       expect(response.statusCode).toBe(200);
-      expect(response.body.length).toBe(2);
+      expect(response.body.length).toBe(1);
 
       expect(response.body).toEqual(
         expect.arrayContaining([
           {
             active: true,
             createdAt: '2025-08-14T08:00:00.000Z',
-            event: { name: 'Tomorrow Land' },
-            eventId: 3,
-            id: 1,
-            user: { email: 'dimitri@tommorowland.be' },
-            userId: 6,
-            value: 50,
-          },
-          {
-            active: true,
-            createdAt: '2025-07-17T08:00:00.000Z',
-            event: { name: 'Tomorrow Land' },
-            eventId: 3,
-            id: 2,
+            event: { name: 'Rock Werchter' },
+            eventId: 2,
+            id: 3,
             user: { email: 'frank.dewever@gmail.com' },
             userId: 5,
-            value: 100,
+            value: 50,
           },
         ]),
       );
@@ -305,7 +329,7 @@ describe('Events', () => {
     //EVENT NOT OWNED BY ORGANISER
     it("should 404 for organisers who don't own the event", async () => {
       const response = await request(app.getHttpServer())
-        .get(`${url}/2/wallets`)
+        .get(`${url}/3/wallets`)
         .auth(organiserAuthToken, { type: 'bearer' });
       expect(response.statusCode).toBe(404);
       expect(response.body.message).toEqual('No event with this id found');
@@ -330,18 +354,18 @@ describe('Events', () => {
     //OWNER OF EVENT
     it('should 200 and return transactions', async () => {
       const response = await request(app.getHttpServer())
-        .get(`${url}/3/transactions`)
+        .get(`${url}/2/transactions`)
         .auth(adminAuthToken, { type: 'bearer' });
       expect(response.statusCode).toBe(200);
-      expect(response.body.length).toBe(2);
+      expect(response.body.length).toBe(3);
 
       expect(response.body).toEqual(
         expect.arrayContaining([
           {
             amount: -8,
             date: '2025-08-15T10:00:00.000Z',
-            eventId: 3,
-            id: 1,
+            eventId: 2,
+            id: 3,
             vendor: { boothName: 'Mario Pizza', userId: 10 },
             vendorId: 10,
             walletId: 1,
@@ -349,7 +373,7 @@ describe('Events', () => {
           {
             amount: -12,
             date: '2025-07-18T13:00:00.000Z',
-            eventId: 3,
+            eventId: 2,
             id: 2,
             vendor: { boothName: 'Mario Pizza', userId: 10 },
             vendorId: 10,
@@ -359,10 +383,18 @@ describe('Events', () => {
       );
     });
 
+    //NON EXISTING EVENT
+    it('should 404 for non-existent event', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`${url}/99999/transactions`)
+        .auth(organiserAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(404);
+      expect(response.body.message).toEqual('No event with this id found');
+    });
     //NON OWNER OF EVENT
     it("should 404 for organisers who don't own the event", async () => {
       const response = await request(app.getHttpServer())
-        .get(`${url}/2/transactions`)
+        .get(`${url}/3/transactions`)
         .auth(organiserAuthToken, { type: 'bearer' });
       expect(response.statusCode).toBe(404);
       expect(response.body.message).toEqual('No event with this id found');
@@ -390,7 +422,7 @@ describe('Events', () => {
     //EVENT NOT OWNED BY ORGANISER
     it('should 404 when the event is not owned by the organiser', async () => {
       const response = await request(app.getHttpServer())
-        .put(`${url}/2`)
+        .put(`${url}/3`)
         .send({ name: 'Updated Name', location: 'Updated Location' })
         .auth(organiserAuthToken, { type: 'bearer' });
       expect(response.statusCode).toBe(404);
@@ -400,21 +432,21 @@ describe('Events', () => {
     //EVENT OWNED BY ORGANISER
     it('should return 200 and update event for organising organiser', async () => {
       const response = await request(app.getHttpServer())
-        .put(`${url}/3`)
+        .put(`${url}/2`)
         .send({ name: 'Updated Name', location: 'Updated Location' })
         .auth(organiserAuthToken, { type: 'bearer' });
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual(
         expect.objectContaining({
-          id: 3,
+          id: 2,
           name: 'Updated Name',
           location: 'Updated Location',
-          startDate: '2025-08-03T00:00:00.000Z',
-          endDate: '2025-08-06T00:00:00.000Z',
+          startDate: '2025-07-03T00:00:00.000Z',
+          endDate: '2025-07-06T00:00:00.000Z',
           organiserId: 6,
           organiser: {
             userId: 6,
-            organisation: 'EDM ligths',
+            organisation: 'EDM lights',
           },
         }),
       );
@@ -433,14 +465,14 @@ describe('Events', () => {
       expect(response.body).toEqual(
         expect.objectContaining({
           id: 3,
-          name: 'Updated Name',
-          location: 'Updated Location',
+          name: 'Tomorrow Land',
+          location: 'Boom',
           startDate: '2025-08-18T00:00:00.000Z',
           endDate: '2025-08-20T00:00:00.000Z',
-          organiserId: 6,
+          organiserId: 1,
           organiser: {
-            userId: 6,
-            organisation: 'EDM ligths',
+            userId: 1,
+            organisation: 'Coop-on',
           },
         }),
       );
@@ -463,7 +495,19 @@ describe('Events', () => {
         .send({ name: 'Pukkelpop' })
         .auth(adminAuthToken, { type: 'bearer' });
       expect(response.statusCode).toBe(409);
-      expect(response.body.message).toEqual('This item already exists');
+      expect(response.body.message).toEqual(
+        'An event with this name already exists',
+      );
+    });
+
+    //NON-EXISTING EVENT
+    it('should 404 when updating a non-existent event', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`${url}/99999`)
+        .send({ name: 'Event' })
+        .auth(adminAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(404);
+      expect(response.body.message).toEqual('No event with this id found');
     });
 
     testAuthHeader(() =>
@@ -492,8 +536,16 @@ describe('Events', () => {
     //NON-OWNER
     it('should return 404 for organisers who do not own the event', async () => {
       const response = await request(app.getHttpServer())
-        .delete(`${url}/1`)
+        .delete(`${url}/3`)
         .auth(organiserAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(404);
+      expect(response.body.message).toEqual('No event with this id found');
+    });
+
+    it('should 404 when deleting a non-existent event as admin', async () => {
+      const response = await request(app.getHttpServer())
+        .delete(`${url}/99999`)
+        .auth(adminAuthToken, { type: 'bearer' });
       expect(response.statusCode).toBe(404);
       expect(response.body.message).toEqual('No event with this id found');
     });
@@ -501,7 +553,7 @@ describe('Events', () => {
     //OWNER OF EVENT
     it('should 204 and return nothing', async () => {
       const response = await request(app.getHttpServer())
-        .delete(`${url}/3`)
+        .delete(`${url}/1`)
         .auth(organiserAuthToken, { type: 'bearer' });
       expect(response.statusCode).toBe(204);
       expect(response.body).toEqual({});
