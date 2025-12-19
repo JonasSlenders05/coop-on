@@ -19,6 +19,7 @@ Ensure the following software is installed on your system:
 - [pnpm](https://pnpm.io/) (Package Manager)
 - [MySQL v8](https://dev.mysql.com/downloads/installer/) (Ensure the MySQL server is running on port 3306)
 - A database client (e.g., [MySQL Workbench](https://dev.mysql.com/downloads/workbench/) or DBeaver)
+- [Stripe CLI](https://docs.stripe.com/stripe-cli/install)
 
 ---
 
@@ -32,7 +33,12 @@ Clone the repository and install the dependencies:
 
 ```bash
 pnpm install
+```
+Generate stripe webhook key in stripe CLI.
 
+```bash
+ stripe login
+ stripe listen --forward-to localhost:3000/webhooks/stripe
 ```
 
 ### 2. Configuration (.env)Create a `.env` file in the root of the project.
@@ -47,6 +53,8 @@ PORT=3000
 DATABASE_URL=mysql://user:password@127.0.0.1:3306/coop_on
 AUTH_JWT_SECRET = <YOUR_JWT_SECRET>
 LOG_LEVELS=["log", "error", "warn", "debug"]
+STRIPE_API_KEY = <YOUR_SECRET_STRIPE_API_KEY>
+STRIPE_WEBHOOK_SECRET = <YOUR_GENERATED_WEBHOOK_SCRET>
 
 ```
 
@@ -68,14 +76,10 @@ pnpm db:seed
 | **Development** | `pnpm start:dev` | Starts the server in 'watch mode' (restarts on file changes). |
 | **Production** | `pnpm start:prod` | Starts the optimized build (requires `pnpm build` first). |
 
-The API is available at: `http://localhost:3000/api` (or check Swagger at `/api/docs` if enabled).
-
 ---
 
 ## 🧪 Testing
 This project includes **End-to-End (E2E) integration test suite**.
-
-
 
 **Instructions:**
 
