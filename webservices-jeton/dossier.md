@@ -3,7 +3,7 @@
 - Student: Jonas Slenders
 - Studentennummer: 2023395591
 - E-mailadres: <jonas.slenders@student.hogent.be>
-- Demo: 
+- Demo: <https://hogent.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=8fcc18a9-d87a-4a80-a033-b3b800d1723f>
 - GitHub-repository: <https://github.com/HOGENT-frontendweb/frontendweb-2526-slendersjonas>
 - Web Services:
   - Online versie: <https://frontendweb-2526-slendersjonas.onrender.com/docs#/>
