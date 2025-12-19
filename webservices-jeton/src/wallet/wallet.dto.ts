@@ -1,4 +1,4 @@
-import { IsDate, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Expose, Type } from 'class-transformer';
 import { EventResponseDto } from '../event/event.dto';
 import { PublicUserResponseDto } from '../user/user.dto';
@@ -123,4 +123,22 @@ export class UpdateWalletRequestDto {
   })
   @IsOptional()
   active?: boolean;
+}
+
+export class WalletTopupDto {
+  @IsNotEmpty()
+  @IsNumber()
+  amount: number;
+
+  @IsOptional()
+  @IsString()
+  currency?: string = 'usd';
+
+  @IsNotEmpty()
+  @IsString()
+  walletId: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
 }

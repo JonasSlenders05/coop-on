@@ -15,6 +15,7 @@ import { OrganiserModule } from './organiser/organiser.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/guards/auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { StripeModule } from './stripe/stripe.module';
 
 @Module({
   imports: [
@@ -22,6 +23,10 @@ import { RolesGuard } from './auth/guards/roles.guard';
     ConfigModule.forRoot({
       load: [configuration],
       isGlobal: true,
+    }),
+    StripeModule.forRoot({
+      apiKey: process.env.STRIPE_API_KEY || '',
+      webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
     }),
     DrizzleModule,
     WalletModule,

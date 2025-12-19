@@ -13,10 +13,14 @@ import {
 import { and, eq } from 'drizzle-orm';
 import { plainToInstance } from 'class-transformer';
 import { PrivateRole } from '../auth/roles';
+import { StripeService } from '../stripe/stripe.service';
 
 @Injectable()
 export class WalletService {
-  constructor(@InjectDrizzle() private readonly db: DatabaseProvider) {}
+  constructor(
+    @InjectDrizzle() private readonly db: DatabaseProvider,
+    private readonly stripeService: StripeService,
+  ) {}
 
   async getAll(): Promise<WalletListResponseDto> {
     const walletList = await this.db.query.wallets.findMany({
@@ -196,5 +200,47 @@ export class WalletService {
         excludeExtraneousValues: true,
       }),
     );
+  }
+
+  async createTokenPurchaseCheckoutSession(
+    currentUserId: number,
+    walletId: number,
+    roles: string[],
+    tokenCount: number,
+  ) {
+    // 1. Controleer of de wallet bestaat
+    await this.getById(currentUserId, walletId, roles);
+
+    // 2. Berekening (1 token = 2 euro = 200 cent)
+    const pricePerTokenCents = 200;
+    const totalAmountCents = tokenCount * pricePerTokenCents;
+
+    const baseUrl = process.env.API_BASE_URL || 'http://localhost:3000/api';
+
+    return this.stripeService.createCheckoutSession(
+      totalAmountCents,
+      'eur',
+      undefined,
+      `${baseUrl}/payment/success`, // <--- Verwijst nu naar je nieuwe controller
+      `${baseUrl}/payment/cancel`, // <--- Verwijst nu naar je nieuwe controller
+      {
+        walletId: walletId.toString(),
+        userId: currentUserId.toString(),
+        tokenCount: tokenCount.toString(),
+      },
+    );
+  }
+
+  async addTokensToWallet(walletId: number, tokensToAdd: number) {
+    const currentWallet = await this.db.query.wallets.findFirst({
+      where: eq(wallets.id, walletId),
+    });
+
+    if (!currentWallet) throw new NotFoundException();
+
+    await this.db
+      .update(wallets)
+      .set({ value: currentWallet.value + tokensToAdd })
+      .where(eq(wallets.id, walletId));
   }
 }

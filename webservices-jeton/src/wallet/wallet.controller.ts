@@ -186,4 +186,40 @@ export class WalletController {
       roles,
     );
   }
+
+  // @Post(':id/topup-checkout')
+  // async createTopupCheckoutSession(
+  //   @Param('walletId') walletId: number,
+  //   @Body() topupData: { amount: number },
+  //   @CurrentUser() user: Session,
+  // ) {
+  //   const roles = [...user.privateRoles, ...user.publicRoles];
+
+  //   const session = await this.walletService.createTopupCheckoutSession(
+  //     user.id,
+  //     walletId,
+  //     roles,
+  //     topupData.amount,
+  //   );
+
+  //   return { checkoutUrl: session.url };
+  // }
+
+  @Post(':id/purchase-tokens')
+  async purchaseTokens(
+    @Param('id') walletId: number,
+    @Body() purchaseData: { tokenCount: number },
+    @CurrentUser() user: Session, // Adjust according to your auth implementation
+  ) {
+    const roles = [...user.privateRoles, ...user.publicRoles];
+
+    const session = await this.walletService.createTokenPurchaseCheckoutSession(
+      user.id,
+      walletId,
+      roles,
+      purchaseData.tokenCount,
+    );
+
+    return { checkoutUrl: session.url };
+  }
 }
