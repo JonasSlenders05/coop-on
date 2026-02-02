@@ -78,6 +78,20 @@ pnpm db:seed
 
 ---
 
+## 🖥️ Frontend (Vite React)
+
+A simple admin frontend lives in `frontend/` to explore the API. Start it after the backend:
+
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
+
+By default the UI expects the backend at `http://localhost:3000/api`. Adjust the base URL in the sidebar if needed.
+
+---
+
 ## 🧪 Testing
 This project includes **End-to-End (E2E) integration test suite**.
 
@@ -104,4 +118,3 @@ When running tests, a temporary test database is automatically created and dropp
 3. Build the application: `pnpm build`
 4. Run migrations on the production database: `pnpm db:migrate`
 5. Start the server: `pnpm start:prod`
-

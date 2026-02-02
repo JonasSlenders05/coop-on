@@ -65,11 +65,11 @@ Vendor 1--* Transaction
 | Method | Endpoint | Description | ADMIN | USER | CUSTOMER | ORGANISER | VENDOR | Status |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | GET | `/api/users` | Get all users | ✔️ | | | | | ✅ |
-| GET | `/api/users/:id` | Get one user by ID | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
-| PUT | `/api/users/:id` | Update a user | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
-| POST | `/api/users` | Add user | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
-| DELETE | `/api/users/:id` | Delete a user | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
-| GET | `/api/users/:id/wallets` | Get all wallets from user | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| GET | `/api/users/:id` | Get one user by ID (supports `me`) | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| PUT | `/api/users/:id` | Update a user (supports `me`) | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| POST | `/api/users` | Register user (public) | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| DELETE | `/api/users/:id` | Delete a user (supports `me`) | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| GET | `/api/users/:id/wallets` | Get all wallets from user (supports `me`) | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
 
 
 ---
@@ -84,13 +84,13 @@ Vendor 1--* Transaction
 ## EventController
 | Method | Endpoint | Description | ADMIN | USER | CUSTOMER | ORGANISER | VENDOR | Status |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| GET | `/api/events` | Get all events | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
-| GET | `/api/events/:id` | Get one event by ID | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| GET | `/api/events` | Get all events | ✔️ | | | | | ✅ |
+| GET | `/api/events/:id` | Get one event by ID | ✔️ | ✔️ | | | | ✅ |
 | POST | `/api/events` | Create a new event | ✔️ | | | ✔️ | | ✅ |
 | PUT | `/api/events/:id` | Update an event | ✔️ | | | ✔️ | | ✅ |
 | DELETE | `/api/events/:id` | Delete an event | ✔️ | | | ✔️ | | ✅ |
 | GET | `/api/events/:id/wallets` | Get all wallets for this event | ✔️ | | | ✔️ | | ✅ |
-| GET | `/api/events/:id/transactions` | Get all wallets for this event | ✔️ | | | ✔️ | | ❓ |
+| GET | `/api/events/:id/transactions` | Get transactions for this event | ✔️ | | | ✔️ | | ✅ |
 
 
 ---
@@ -99,9 +99,9 @@ Vendor 1--* Transaction
 | Method | Endpoint | Description | ADMIN | USER | CUSTOMER | ORGANISER | VENDOR | Status |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | GET | `/api/organisers` | Get all organisers | ✔️ | | | | | ✅ |
-| GET | `/api/organisers/:id` | Get one organiser by ID | ✔️ | | | ✔️ | | ✅ |
-| PUT | `/api/organisers/:id` | Update organiser | ✔️ | | | ✔️ | | ✅ |
-| GET | `/api/organisers/:id/events`| Get all events of this organiser | ✔️ | | | ✔️ | | ✅ |
+| GET | `/api/organisers/:id` | Get one organiser by ID (supports `me`) | ✔️ | | | ✔️ | | ✅ |
+| PUT | `/api/organisers/:id` | Update organiser (supports `me`) | ✔️ | | | ✔️ | | ✅ |
+| GET | `/api/organisers/:id/events`| Get all events of this organiser (supports `me`) | ✔️ | | | ✔️ | | ✅ |
 
 ---
 
@@ -109,11 +109,12 @@ Vendor 1--* Transaction
 | Method | Endpoint | Description | ADMIN | USER | CUSTOMER | ORGANISER | VENDOR | Status |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | GET | `/api/wallets` | Get all wallets | ✔️ | | | | | ✅ |
-| GET | `/api/wallets/:id` | Get one wallet by ID | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
-| POST | `/api/wallets` | Create a new wallet | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
-| PUT | `/api/wallets/:id` | Update wallet | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
-| DELETE | `/api/wallets/:id` | Delete a wallet | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
-| GET | `/api/wallets/:id/transactions`| Get transactions for this wallet | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| GET | `/api/wallets/:id` | Get one wallet by ID | ✔️ | ✔️ | | | | ✅ |
+| POST | `/api/wallets` | Create a new wallet | ✔️ | ✔️ | | | | ✅ |
+| PUT | `/api/wallets/:id` | Update wallet | ✔️ | ✔️ | | | | ✅ |
+| DELETE | `/api/wallets/:id` | Delete a wallet | ✔️ | ✔️ | | | | ✅ |
+| GET | `/api/wallets/:id/transactions`| Get transactions for this wallet | ✔️ | ✔️ | | | | ✅ |
+| POST | `/api/wallets/:id/purchase-tokens` | Purchase tokens (checkout) | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
 
 
 ---
@@ -122,8 +123,8 @@ Vendor 1--* Transaction
 | Method | Endpoint | Description | ADMIN | USER | CUSTOMER | ORGANISER | VENDOR | Status |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | GET | `/api/transactions` | Get all transactions | ✔️ | | | | | ✅ |
-| GET | `/api/transactions/:id` | Get one transaction by ID | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
-| POST | `/api/transactions` | Create a transaction (Payment) | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✅ |
+| GET | `/api/transactions/:id` | Get one transaction by ID | ✔️ | ✔️ | | | | ✅ |
+| POST | `/api/transactions` | Create a transaction (Payment) | ✔️ | ✔️ | | | | ✅ |
 | PUT | `/api/transactions/:id` | Update a transaction | ✔️ | | | | | ✅ |
 | DELETE | `/api/transactions/:id` | Delete a transaction | ✔️ | | | | | ✅ |
 
@@ -134,9 +135,9 @@ Vendor 1--* Transaction
 | Method | Endpoint | Description | ADMIN | USER | CUSTOMER | ORGANISER | VENDOR | Status |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | GET | `/api/vendors` | Get all vendors | ✔️ | | | | | ✅ |
-| GET | `/api/vendors/:id` | Get one vendor by userID | ✔️ | | | | ✔️ | ✅ |
-| PUT | `/api/vendors/:id` | Update vendor info | ✔️ | | | | ✔️ | ✅ |
-| GET | `/api/vendors/:id/transactions`| Get transactions for this vendor | ✔️ | | | | ✔️ | ✅ |
+| GET | `/api/vendors/:id` | Get one vendor by userID | ✔️ | ✔️ | | | | ✅ |
+| PUT | `/api/vendors/:id` | Update vendor info (supports `me`) | ✔️ | | | | ✔️ | ✅ |
+| GET | `/api/vendors/:id/transactions`| Get transactions for this vendor (supports `me`) | ✔️ | | | | ✔️ | ✅ |
 
 
 
