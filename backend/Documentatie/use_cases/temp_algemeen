@@ -1,0 +1,210 @@
+# Use cases – Coop-on backend
+
+Onderstaande use cases zijn opgesteld per functionaliteit in de backend (op basis van de aanwezige controllers/modules). Elke use case beschrijft het doel, de actor en het basisscenario.
+
+## UC-01 – Registreren van een nieuwe gebruiker
+**Functionaliteit:** Users (registratie)
+
+- **Primaire actor:** Bezoeker
+- **Doel:** Een nieuw account aanmaken om de API te gebruiken.
+- **Voorwaarden:** Geen (publieke endpoint).
+- **Basisscenario:**
+  1. Bezoeker vult registratiegegevens in (naam, e-mail, wachtwoord, etc.).
+  2. Systeem valideert invoer en maakt een gebruiker aan.
+  3. Systeem retourneert een sessietoken.
+- **Alternatieven / fouten:** Ongeldige invoer → foutmelding.
+
+## UC-02 – Aanmelden (login)
+**Functionaliteit:** Sessions (authenticatie)
+
+- **Primaire actor:** Gebruiker
+- **Doel:** Inloggen om beveiligde endpoints te gebruiken.
+- **Voorwaarden:** Gebruiker bestaat in het systeem.
+- **Basisscenario:**
+  1. Gebruiker verstuurt login-gegevens.
+  2. Systeem controleert credentials.
+  3. Systeem retourneert een sessietoken.
+- **Alternatieven / fouten:** Onjuiste credentials → 401.
+
+## UC-03 – Gebruikers beheren (CRUD)
+**Functionaliteit:** Users
+
+- **Primaire actor:** Admin of ingelogde gebruiker (voor eigen profiel)
+- **Doel:** Gebruikers aanmaken, raadplegen, wijzigen of verwijderen.
+- **Voorwaarden:** Geldige sessie en juiste rol/rechten.
+- **Basisscenario’s:**
+  - Admin vraagt lijst van alle gebruikers op.
+  - Gebruiker bekijkt eigen profiel of admin bekijkt een gebruiker.
+  - Gebruiker/admin past profielinformatie aan.
+  - Gebruiker/admin verwijdert een gebruiker.
+- **Alternatieven / fouten:** Geen toegang → 403, onbekende gebruiker → 404.
+
+## UC-04 – Gebruikerswallets raadplegen
+**Functionaliteit:** Users → Wallets
+
+- **Primaire actor:** Gebruiker of admin
+- **Doel:** Alle wallets van een gebruiker bekijken.
+- **Voorwaarden:** Geldige sessie en toegang tot de gebruiker.
+- **Basisscenario:**
+  1. Actor vraagt wallets op voor een gebruiker (bv. `me`).
+  2. Systeem verifieert rechten.
+  3. Systeem retourneert wallets.
+- **Alternatieven / fouten:** Geen toegang → 403.
+
+## UC-05 – Events beheren
+**Functionaliteit:** Events
+
+- **Primaire actor:** Organiser of admin
+- **Doel:** Events aanmaken, wijzigen, verwijderen en raadplegen.
+- **Voorwaarden:** Organiser of admin rechten.
+- **Basisscenario’s:**
+  - Organiser maakt een event aan.
+  - Organiser/admin past eventdetails aan.
+  - Organiser/admin verwijdert een event.
+  - Admin raadpleegt alle events of details van een event.
+- **Alternatieven / fouten:** Geen toegang → 403, onbekend event → 404.
+
+## UC-06 – Event wallets raadplegen
+**Functionaliteit:** Events → Wallets
+
+- **Primaire actor:** Organiser of admin
+- **Doel:** Alle wallets binnen een event bekijken.
+- **Voorwaarden:** Actor heeft rechten op het event.
+- **Basisscenario:**
+  1. Actor vraagt wallets op voor een event.
+  2. Systeem verifieert toegang.
+  3. Systeem retourneert wallets.
+- **Alternatieven / fouten:** Geen toegang → 403, event niet gevonden → 404.
+
+## UC-07 – Event transacties raadplegen
+**Functionaliteit:** Events → Transactions
+
+- **Primaire actor:** Organiser of admin
+- **Doel:** Transacties binnen een event bekijken.
+- **Voorwaarden:** Actor heeft rechten op het event.
+- **Basisscenario:**
+  1. Actor vraagt transacties op voor een event.
+  2. Systeem verifieert toegang.
+  3. Systeem retourneert transacties.
+- **Alternatieven / fouten:** Geen toegang → 403, event niet gevonden → 404.
+
+## UC-08 – Organisers beheren
+**Functionaliteit:** Organisers
+
+- **Primaire actor:** Organiser of admin
+- **Doel:** Organiser-profiel bekijken of bijwerken.
+- **Voorwaarden:** Organiser of admin rechten.
+- **Basisscenario’s:**
+  - Admin vraagt alle organisers op.
+  - Organiser/admin bekijkt organiserprofiel.
+  - Organiser/admin past organiserinformatie aan.
+- **Alternatieven / fouten:** Geen toegang → 403, organiser niet gevonden → 404.
+
+## UC-09 – Events van organiser raadplegen
+**Functionaliteit:** Organisers → Events
+
+- **Primaire actor:** Organiser of admin
+- **Doel:** Overzicht van events per organiser.
+- **Voorwaarden:** Rechten op organiserprofiel.
+- **Basisscenario:**
+  1. Actor vraagt events op voor een organiser.
+  2. Systeem valideert rechten.
+  3. Systeem retourneert events.
+- **Alternatieven / fouten:** Geen toegang → 403, organiser niet gevonden → 404.
+
+## UC-10 – Wallets beheren
+**Functionaliteit:** Wallets
+
+- **Primaire actor:** Gebruiker of admin
+- **Doel:** Wallet aanmaken, bekijken, wijzigen of verwijderen.
+- **Voorwaarden:** Geldige sessie en rechten.
+- **Basisscenario’s:**
+  - Gebruiker/admin maakt wallet aan.
+  - Gebruiker/admin bekijkt walletdetails.
+  - Gebruiker/admin wijzigt walletstatus of koppeling.
+  - Gebruiker/admin verwijdert een wallet.
+- **Alternatieven / fouten:** Geen toegang → 403, wallet niet gevonden → 404.
+
+## UC-11 – Wallettransacties raadplegen
+**Functionaliteit:** Wallets → Transactions
+
+- **Primaire actor:** Gebruiker of admin
+- **Doel:** Alle transacties van een wallet bekijken.
+- **Voorwaarden:** Actor heeft toegang tot wallet.
+- **Basisscenario:**
+  1. Actor vraagt transacties op voor wallet.
+  2. Systeem verifieert rechten.
+  3. Systeem retourneert transacties.
+- **Alternatieven / fouten:** Geen toegang → 403, wallet niet gevonden → 404.
+
+## UC-12 – Tokens kopen (Stripe checkout)
+**Functionaliteit:** Wallets + Stripe
+
+- **Primaire actor:** Gebruiker
+- **Doel:** Tokens kopen voor een wallet via Stripe.
+- **Voorwaarden:** Geldige sessie en toegang tot wallet.
+- **Basisscenario:**
+  1. Gebruiker start token-aankoop voor wallet met gewenst aantal tokens.
+  2. Systeem maakt een Stripe Checkout-sessie aan.
+  3. Systeem retourneert checkout-URL.
+- **Alternatieven / fouten:** Onvoldoende rechten → 403, ongeldige invoer → 400.
+
+## UC-13 – Stripe webhook verwerken
+**Functionaliteit:** Stripe webhook
+
+- **Primaire actor:** Stripe (extern systeem)
+- **Doel:** Wallets automatisch opwaarderen na betaling.
+- **Voorwaarden:** Geldige Stripe-signature en webhook ingesteld.
+- **Basisscenario:**
+  1. Stripe stuurt `checkout.session.completed` webhook.
+  2. Systeem valideert signature en payload.
+  3. Systeem leest metadata (walletId, tokenCount).
+  4. Systeem voegt tokens toe aan de wallet.
+- **Alternatieven / fouten:** Signature ontbreekt/ongeldig → 400; ontbrekende metadata → 400.
+
+## UC-14 – Transacties beheren
+**Functionaliteit:** Transactions
+
+- **Primaire actor:** Admin of gebruiker (voor eigen transacties)
+- **Doel:** Transacties aanmaken en raadplegen; admin kan bijwerken of verwijderen.
+- **Voorwaarden:** Geldige sessie en rechten.
+- **Basisscenario’s:**
+  - Admin vraagt alle transacties op.
+  - Gebruiker/admin bekijkt een transactie.
+  - Gebruiker/admin maakt een betalingstransactie aan.
+  - Admin wijzigt of verwijdert een transactie.
+- **Alternatieven / fouten:** Geen toegang → 403, transactie niet gevonden → 404.
+
+## UC-15 – Vendors beheren
+**Functionaliteit:** Vendors
+
+- **Primaire actor:** Vendor of admin
+- **Doel:** Vendorprofiel raadplegen of bijwerken.
+- **Voorwaarden:** Geldige sessie en vendor/admin rechten.
+- **Basisscenario’s:**
+  - Admin vraagt alle vendors op.
+  - Vendor/admin bekijkt vendorprofiel.
+  - Vendor/admin past vendorinformatie aan.
+- **Alternatieven / fouten:** Geen toegang → 403, vendor niet gevonden → 404.
+
+## UC-16 – Vendortransacties raadplegen
+**Functionaliteit:** Vendors → Transactions
+
+- **Primaire actor:** Vendor of admin
+- **Doel:** Overzicht van verkopen/transacties per vendor.
+- **Voorwaarden:** Toegang tot vendorprofiel.
+- **Basisscenario:**
+  1. Actor vraagt transacties op voor vendor.
+  2. Systeem valideert toegang.
+  3. Systeem retourneert transacties.
+- **Alternatieven / fouten:** Geen toegang → 403, vendor niet gevonden → 404.
+
+## UC-17 – Health check
+**Functionaliteit:** Health
+
+- **Primaire actor:** Monitoring of devops
+- **Doel:** Controleren of de API beschikbaar is.
+- **Voorwaarden:** Geen (publiek).
+- **Basisscenario:**
+  1. Actor roept `/health/ping` op.
+  2. Systeem retourneert `{ pong: true }`.
